@@ -5,8 +5,7 @@
 
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width">
-        <!--REMOVE INLINE STYLES. then uncomment-->
-        <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">-->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
 
         <script src="index.js" defer></script>
 
@@ -31,7 +30,7 @@
                     We are <u>NOT</u> responsible for any violations you may acquire while using them.
                 </h3>
 
-                <button class="off" onclick="window.open('/guide.html');" style="width: 15rem;">USER GUIDE</button>
+                <button class="off width" onclick="window.open('/guide.html');">USER GUIDE</button>
 
                 <div class="button-guide">
 					<h3>Button Guide</h3>
@@ -47,11 +46,11 @@
 			</div>
             <div class="panel" hidden>
 				<h2 class="module-name">PROFILE CONFIGURATION</h2>
-                <button id="add" class="off" onclick="storage.add();" style="width: 15rem;">NEW PROFILE</button>
-                <button id="save" class="off" onclick="storage.save();" style="width: 15rem;">SAVE</button>
+                <button id="add" class="off width" onclick="storage.add();">NEW PROFILE</button>
+                <button id="save" class="off width" onclick="storage.save();">SAVE</button>
                 <select id="configselect"></select>
-                <button id="load" class="off" onclick="storage.load();" style="width: 15rem;">LOAD</button>
-				<button id="remove" class="off" onclick="storage.remove();" style="width: 15rem;">DELETE</button>
+                <button id="load" class="off width" onclick="storage.load();">LOAD</button>
+				<button id="remove" class="off width" onclick="storage.remove();">DELETE</button>
 
                 <div class="checkbox-row">
                     <input id="loadempty" type="checkbox" checked>
@@ -82,7 +81,7 @@
 					</div>
 				</div>
 
-				<button id="config" class="off" onclick="config();" style="width: 15rem;">CONFIGURE</button>
+				<button id="config" class="off width" onclick="config();">CONFIGURE</button>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">DYNAMIC SYSTEMS</h2>
@@ -119,7 +118,7 @@
                 <input id="climbspd" type="number" placeholder="Climb-Out Speed (kts)" min="0" step="5">
                 <input id="climbthrottle" type="number" placeholder="Climb Throttle (%)" min="0" max="100" step="1">
 				<div class="input-option-container">
-					<input id="climbalt" type="number" placeholder="Level-off Altitude (ft)" min="0" step="100" class="input-option-l">
+					<input id="climbalt" class="input-option-l" type="number" placeholder="Level-off Altitude (ft)" min="0" step="100">
                 	<select id="climbtype" class="input-option-s">
                         <option value="msl">MSL</option>
                     	<option value="agl">AGL</option>
@@ -133,9 +132,9 @@
 						<option value="v">VPA (deg)</option>
                 	</select>
 				</div>
-				<button id="takeoffconfig" style="width: 15rem;">CONFIGURE FOR TAKEOFF</button>
-				<button id="autotakeoff" style="width: 15rem;">AUTO TAKEOFF</button>
-				<button id="reject" style="width: 15rem;">REJECT TAKEOFF</button>
+				<button id="takeoffconfig" class="width">CONFIGURE FOR TAKEOFF</button>
+				<button id="autotakeoff" class="width">AUTO TAKEOFF</button>
+				<button id="reject" class="width">REJECT TAKEOFF</button>
               	<div class="checkbox-container">
 					<div class="checkbox-row">
 						<input id="takeoffspool" type="checkbox">
@@ -156,7 +155,7 @@
                 <input id="flytolat" type="number" placeholder="Latitude (deg)" min="-90" max="90">
 				<input id="flytolong" type="number" placeholder="Longitude (deg)" min="-180" max="180">
 				<input id="flytohdg" type="number" placeholder="Heading (deg)" min="0" max="360" step="1">
-				<button id="flyto" style="width: 15rem;">FLY TO</button>
+				<button id="flyto" class="width">FLY TO</button>
                 <br><br>
 
 				<div class="input-option-container">
@@ -167,7 +166,7 @@
 						<option value="v">VPA (deg)</option>
                 	</select>
 				</div>
-				<button id="levelchange" style="width: 15rem;">LEVEL CHANGE</button>
+				<button id="levelchange" class="width">LEVEL CHANGE</button>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">PATTERN WORK</h2>
@@ -189,7 +188,7 @@
 						<option value="f">Final</option>
 					</select>
 				</div>
-				<button id="flypattern" style="width: 15rem;">FLY PATTERN</button>
+				<button id="flypattern" class="width">FLY PATTERN</button>
                 <div class="checkbox-container">
 					<div class="checkbox-row">
 						<input id="approach" oninput="if(this.checked){this.checked = autoland.validateInputs(true);}" type="checkbox">
@@ -202,8 +201,8 @@
 				<input id="longref" type="number" placeholder="Longitude Reference (deg)" min="-180" max="180">
                 <input id="altref" type="number" placeholder="Airport Elevation (ft)" min="0" step="1">
 				<input id="hdgref" type="number" placeholder="HDG Reference (deg)" min="0" max="360" step="1">
-				<button id="markposition" style="width: 15rem;">MARK POSITION</button>
-				<button id="setrunway" style="width: 15rem;">SET RUNWAY</button>
+				<button id="markposition" class="width">MARK POSITION</button>
+				<button id="setrunway" class="width">SET RUNWAY</button>
 			</div>
             <div class="panel" hidden>
 				<h2 class="module-name">AUTO APPROACH AND LAND</h2>
@@ -219,16 +218,16 @@
                     <option value="p">Low Pass</option>
                	</select>
 
-				<button id="autoland" style="width: 15rem;">APPROACH</button>
-               	<button id="goaround" style="width: 15rem;">GO AROUND</button>
+				<button id="autoland" class="width">APPROACH</button>
+               	<button id="goaround" class="width">GO AROUND</button>
 			</div>
             <div class="panel" hidden>
 				<h2 class="module-name">VNAV</h2>
 				<div id="waypoints"></div>
 
-				<button id="speedpanel" class="off" style="width: 15rem;">SPEED PANEL</button>
-				<button id="updatefpl" style="width: 15rem;">UPDATE FPL</button>
-				<button id="vnav" style="width: 15rem;">VNAV</button>
+				<button id="speedpanel" class="off width">SPEED PANEL</button>
+				<button id="updatefpl" class="width">UPDATE FPL</button>
+				<button id="vnav" class="width">VNAV</button>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">CALLOUTS</h2>
@@ -236,8 +235,8 @@
 
 				<input id="utterancerate" type="number" placeholder="Voice Rate (1-4)" min="0.5" max="4">
 				<input id="minumuns" type="number" placeholder="Minumuns Altitude (ft)">
-				<button id="callout" style="width: 15rem;">CALLOUTS</button>
-				<button id="callouttest" onclick="speak('Testing')" class="off" style="width: 15rem;">TEST</button>
+				<button id="callout" class="width">CALLOUTS</button>
+				<button id="callouttest" onclick="speak('Testing')" class="off width">TEST</button>
 			</div>
 		</div>
     </body>

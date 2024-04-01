@@ -20,7 +20,7 @@ class Autofunction {
 
         this.#button = element as HTMLElement;
         this.#button.addEventListener("click", () => {dependencyCheck(button); this.setActive();});
-        this.#updateButton();
+        this.#setButton();
 
         this.#numStates = states.length;
         this.#inputs = inputs;
@@ -54,7 +54,7 @@ class Autofunction {
         if(this.#active === state){return;}
 
         this.#active = state;
-        this.#updateButton();
+        this.#setButton();
 
         if(this.#active){
             this.stage = 0;
@@ -67,8 +67,21 @@ class Autofunction {
         }
     }
 
-    #updateButton():void {
-        this.#button.className = this.isActive() ? "active" : "off";
+    #setButton(state:string = ""):void {
+        const classList = this.#button.classList;
+        const states = ["off", "active", "armed", "error"];
+
+        if(state === ""){
+            state = this.isActive() ? "active" : "off";
+        }
+
+        if(classList.contains(state)){return;}
+
+        states.forEach(option => {
+            classList.remove(option);
+        });
+
+        classList.add(state);
     }
 
     #run():void {
@@ -86,7 +99,7 @@ class Autofunction {
             });
 
             if(!this.#armed && wasArmed){
-                this.#updateButton();
+                this.#setButton();
             }
 
             if(this.delay === -1){
@@ -131,12 +144,12 @@ class Autofunction {
 
     arm():void {
         this.#armed = true;
-        this.#button.className = "armed";
+        this.#setButton("armed");
     }
 
     error():void {
         this.setActive(false);
-        this.#button.className = "error";
-        setTimeout(() => {this.#updateButton();}, 2000);
+        this.#setButton("error");
+        setTimeout(() => {this.#setButton();}, 2000);
     }
 }

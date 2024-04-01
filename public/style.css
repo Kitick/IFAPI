@@ -106,6 +106,10 @@ select{
 	margin-bottom: 1rem;
 }
 
+.width{
+    width: 15rem;
+}
+
 div[hidden]{
 	display: none;
 }
