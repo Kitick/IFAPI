@@ -6,27 +6,17 @@
     "bin": "index.js",
     "scripts": {
         "buildServer": "tsc -p server",
-        "postbuildServer": "terser index.js -o index.js -c -m --toplevel",
+        "postbuildServer": "terser index.js -o index.js -c -m",
         "buildSource": "tsc -p source",
         "postbuildSource": "terser public/index.js -o public/index.js -c -m",
         "build": "npm run buildServer",
         "postbuild": "npm run buildSource",
-        "precompile": "npm run build",
-        "compile": "pkg ."
-    },
-    "pkg": {
-        "targets": [
-            "node16-win-x64",
-            "node16-linux-x64"
-        ],
-        "assets": "public/*",
-        "outputPath": "executables"
+        "precompile": "npm run build"
     },
     "author": "Kevin Munson",
     "license": "ISC",
     "dependencies": {
-        "express": "^4.18.2",
-        "net": "^1.0.2",
-        "socket.io": "^4.7.4"
+        "electron": "^29.1.6",
+        "net": "^1.0.2"
     }
 }

@@ -1,5 +1,5 @@
 {
-"files":["types.ts", "item.ts", "client.ts", "manager.ts", "index.ts"],
+"files":["types.ts", "item.ts", "client.ts", "index.ts"],
 "compilerOptions": {
     "target": "esnext",
     "outFile": "../index.js",

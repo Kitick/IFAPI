@@ -1,39 +1,53 @@
-const Express = require("express");
-const app = new Express();
-const server = app.listen(8080);
-const io = require("socket.io")(server);
+const {app, BrowserWindow, ipcMain} = require("electron");
 
-app.use(Express.static(__dirname + "/public"));
+let display:any;
+let client:Client;
 
-// Sockets
-io.on("connection", (socket:any) => {
-    socket.on("disconnect", () => {
-        console.log("Client Disconnected");
-        manager.remove(socket);
+app.whenReady().then(() => {
+    const browser = new BrowserWindow({
+        width: 1600,
+        height: 900,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: __dirname + "/preload.js",
+        }
     });
 
-	socket.on("bridge", (address:string) => {
-        manager.log(socket, "Connection Requested");
-		manager.bridge(socket, address);
-	});
+    browser.loadFile("public/index.html");
 
-	socket.on("break", () => {
-        manager.log(socket, "Closure Requested");
-		manager.close(socket);
-	});
+    display = browser.webContents;
+    client = new Client(display);
 
-	socket.on("read", (command:string, callback:(data:stateValue|undefined|null) => void) => {
-		manager.read(socket, command, callback);
-	});
-
-	socket.on("write", (command:string, value:stateValue) => {
-		manager.write(socket, command, value);
-	});
-
-    console.log("New Client Connected");
+    console.log("\nLoading Complete, Server Ready");
 });
 
-const manager = new ClientManager();
+ipcMain.on("bridge", (event:any, [address]:[string]) => {
+    client.log("Connection Requested");
+	client.connect(address);
+});
 
-console.log("\nLoading Complete, Server Ready");
-console.log("\nOpen Browser to localhost:8080\n");
+ipcMain.on("break", (event:any) => {
+    client.log("Closure Requested");
+	client.close();
+});
+
+ipcMain.on("read", (event:any, [command, callbackID]:[string, any]) => {
+    const item = client.getItem(command);
+    if(item === undefined){
+        display.send("readback", callbackID, undefined);
+        return;
+    }
+
+    client.readState(command, () => {
+        display.send("readback", callbackID, item.value);
+    });
+});
+
+ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
+    const item = client.getItem(command);
+    if(item === undefined){return;}
+
+    item.value = value;
+    client.writeState(command);
+});

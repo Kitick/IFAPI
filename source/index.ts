@@ -1,3 +1,37 @@
+const server = (window as any).electron;
+
+server.on("ready", ([address]:[string]) => {
+    (document.getElementById("address") as HTMLInputElement).value = address;
+    setHidden(false);
+});
+
+server.on("log", ([response]:[string]) => {
+    log(response);
+});
+
+const readbacks:Map<string, (value:stateValue) => void> = new Map();
+
+server.on("readback", ([id, value]:[string, stateValue]) => {
+    const callback = readbacks.get(id) as any;
+    callback(value);
+
+    readbacks.delete(id);
+});
+
+function read(command:string, callback = (value:stateValue) => {}):void {
+    let index = 0;
+    let id;
+
+    while(true){
+        id = command + index;
+        if(!readbacks.has(id)){break;}
+        index++;
+    }
+
+    readbacks.set(id, callback);
+    server.send("read", command, id);
+}
+
 function bridge():void {
     let address = (document.getElementById("address") as HTMLInputElement).value;
     const parts = address.split(".");
@@ -14,32 +48,22 @@ function bridge():void {
         }
     }
 
-    socket.volatile.emit("bridge", address);
+    server.send("bridge", address);
 }
 
 function closeBridge():void {
     reset();
-    socket.volatile.emit("break");
-}
-
-function read(command:string, callback = (value:stateValue) => {}):void {
-    socket.emit("read", command, (value:stateValue) => {
-        callback(value);
-    });
-}
-
-function readAsync(command:string, callback = (value:stateValue) => {}):void {
-    socket.emit("readAsync", command, (value:stateValue) => {
-        callback(value);
-    });
+    server.send("break");
 }
 
 function readLog(command:string):void {
-    read(command, (value:stateValue) => { console.log(value); });
+    read(command, (value:stateValue) => {
+        console.log(value);
+    });
 }
 
 function write(command:string, value:stateValue){
-    socket.emit("write", command, value);
+    server.send("write", command, value);
 }
 
 function setHidden(hidden:boolean):void {
@@ -75,27 +99,3 @@ for(let i = 0, length = voices.length; i < length; i++){
     const newOption = new Option(voices[i].lang, i.toString());
     select.add(newOption);
 }
-
-const socket = io();
-
-socket.on("connect", () => {
-    log("Connected to Server");
-});
-
-socket.on("disconnect", () => {
-    reset();
-    log("Server Disconnected\n\nPlease Restart Server");
-});
-
-socket.on("connect_error", () => {
-    console.clear();
-});
-
-socket.on("ready", (address:string) => {
-    (document.getElementById("address") as HTMLInputElement).value = address;
-    setHidden(false);
-});
-
-socket.on("log", (response:string) => {
-    log(response);
-});

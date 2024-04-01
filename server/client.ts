@@ -2,7 +2,7 @@ const Net = require("net");
 const UDP = require("dgram");
 
 class Client {
-    #socket:any;
+    #display:any;
     #address:string = "";
     #device:any = new Net.Socket();
     #scanner:any|null = null;
@@ -11,8 +11,8 @@ class Client {
     #dataBuffer:Buffer = Buffer.alloc(0);
     #manifest:Map<string, Item> = new Map();
 
-	constructor(socket:any){
-        this.#socket = socket;
+	constructor(display:any){
+        this.#display = display;
 
 		this.#initManifest();
 
@@ -111,7 +111,7 @@ class Client {
 			});
 
 			this.log(this.#address + "\nManifest Built, API Ready");
-			this.#socket.emit("ready", this.#address);
+			this.#display.send("ready", this.#address);
 
             return;
 		}
@@ -139,14 +139,14 @@ class Client {
     }
 
     log(message:string):void {
-		this.#socket.emit("log", message);
+		this.#display.send("log", message);
 		console.log(message);
 	}
 
     connect(address = ""):void {
 		if(this.#active){
 			this.log(this.#address + " TCP is already active");
-            this.#socket.emit("ready", this.#address);
+            this.#display.send("ready", this.#address);
 			return;
 		}
 
