@@ -11,7 +11,6 @@
     "postbuildSource": "terser public/index.js -o public/index.js -c -m",
     "build": "npm run buildServer",
     "postbuild": "npm run buildSource",
-    "precompile": "npm run build",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"

@@ -155,7 +155,7 @@ const autospoilers = new Autofunction("spoilers", 1000, [], ["spoilers", "airspe
     if(onrunway || (!onground && altitudeAGL < 1000)){
         newSpoilers = 2;
     }
-    else if((airspeed - spd >= 20 || (spd > 255 && altitude < 10000)) && altitude < 28000){
+    else if(!onground && (airspeed - spd >= 20 || (spd > 255 && altitude < 10000)) && altitude < 28000){
         newSpoilers = 1;
     }
 
@@ -404,7 +404,7 @@ const autotakeoff = new Autofunction("autotakeoff", 500, ["rotate", "climbspd", 
         }
     }
     else if(stage === 2){
-        if(airspeed >= rotate){
+        if(airspeed >= rotate - 25){
             levelchange.setActive(true);
             stage++;
         }

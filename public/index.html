@@ -5,7 +5,7 @@
 
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
 
         <script src="index.js" defer></script>
 
@@ -15,12 +15,12 @@
 		<div class="panel-container">
 			<div id="setup" class="panel">
 				<h2 class="module-name">SETUP</h2>
-        		<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Offline</span></h3>
+        		<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Standby</span></h3>
 
                 <input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
         		<div class="setup-button-container">	
-					<button onclick="bridge();" class="connect-button">Connect</button>
-        			<button onclick="closeBridge();" class="close-button">Close</button>
+					<button id="connectButton" onclick="bridge();">Connect</button>
+        			<button id="closeButton" onclick="closeBridge();">Close</button>
 				</div>
 
                 <h3>Ensure you are loaded in a flight before connecting<br><br>Restart the connection if you start a new flight</h3>
@@ -108,7 +108,7 @@
 					<input id="flaphigh" type="number" placeholder="Clean Speed (kts)" min="0" step="5">
 					<input id="flapto" type="number" placeholder="Takeoff Flap (#)" min="0" step="1">
 					<input id="cruisespd" type="number" placeholder="Cruise SPD (kts)" min="0" step="5">
-					<input id="cruisealt" type="number" placeholder="Cruise ALT (ft)" min="0" step="5" hidden>
+					<input id="cruisealt" type="number" placeholder="Cruise ALT (fl)" min="0" step="5" hidden>
 				</div>
 			</div>
 			<div class="panel" hidden>
@@ -118,7 +118,7 @@
                 <input id="climbspd" type="number" placeholder="Climb-Out Speed (kts)" min="0" step="5">
                 <input id="climbthrottle" type="number" placeholder="Climb Throttle (%)" min="0" max="100" step="1">
 				<div class="input-option-container">
-					<input id="climbalt" class="input-option-l" type="number" placeholder="Level-off Altitude (ft)" min="0" step="100">
+					<input id="climbalt" class="input-option-l" type="number" placeholder="Level-off Alt (ft)" min="0" step="100">
                 	<select id="climbtype" class="input-option-s">
                         <option value="msl">MSL</option>
                     	<option value="agl">AGL</option>
@@ -206,9 +206,9 @@
 			</div>
             <div class="panel" hidden>
 				<h2 class="module-name">AUTO APPROACH AND LAND</h2>
-                <input id="spdref" type="number" step="5" placeholder="Landing Speed VRef (kts)" min="0">
+                <input id="spdref" type="number" step="5" placeholder="Landing Speed (VRef kts)" min="0">
                	<input id="flare" type="number" placeholder="Flare Height (ft)" min="0" step="5">
-               	<input id="touchdown" type="number" placeholder="Distance from threshold (ft)" min="0" step="100">
+               	<input id="touchdown" type="number" placeholder="Touchdown Distance (ft)" min="0" step="100">
                	<input id="vparef" type="number" placeholder="VPA Refrence (deg)" min="0" max="6" step="0.1">
 
                	<select id="option">

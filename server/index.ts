@@ -19,7 +19,7 @@ app.whenReady().then(() => {
     display = browser.webContents;
     client = new Client(display);
 
-    console.log("\nLoading Complete, Server Ready");
+    console.log("\nLoading Complete, Server Ready\n");
 });
 
 ipcMain.on("bridge", (event:any, [address]:[string]) => {

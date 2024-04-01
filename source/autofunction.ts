@@ -34,8 +34,12 @@ class Autofunction {
             const inputElement = element as HTMLInputElement;
             const tooltip = document.getElementById("tooltip") as HTMLHeadingElement;
 
-            inputElement.addEventListener("mouseenter", () => {tooltip.innerText = inputElement.placeholder;});
-            inputElement.addEventListener("mouseout", () => {tooltip.innerText = "Tooltip";});
+            inputElement.addEventListener("mouseenter", () => {
+                tooltip.innerText = inputElement.placeholder;
+            });
+            inputElement.addEventListener("mouseout", () => {
+                tooltip.innerText = "Tooltip";
+            });
         });
 
         states.forEach(state => {

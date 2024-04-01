@@ -122,11 +122,11 @@ div[hidden]{
 	padding-top: 1.5rem;
 }
 
-.connect-button{
+#connectButton{
 	background-color: #038f03;
 }
 
-.close-button{
+#closeButton{
 	background-color: #990000;
 }
 
