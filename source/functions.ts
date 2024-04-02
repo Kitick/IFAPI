@@ -625,6 +625,8 @@ const autoland = new Autofunction("autoland", 1000, ["latref", "longref", "altre
     const groundspeed = states.get("groundspeed") as number;
     const onrunway = states.get("onrunway") as boolean;
 
+    const altitudeAGL = altitude - altref;
+
     if(autoland.stage === 0){
         Autofunction.cache.save("flcmode", "v");
         Autofunction.cache.save("leg", "f");
@@ -634,21 +636,19 @@ const autoland = new Autofunction("autoland", 1000, ["latref", "longref", "altre
     const touchdownZone = calcLLfromHD({lat:latref, long:longref}, hdgref, touchdown / 6076.12);
     const touchdownDistance = 6076.12 * calcLLdistance({lat:latitude, long:longitude}, touchdownZone); // nm to ft
 
-    if(autoland.stage === 1 && touchdownDistance <= 1000){
+    if(autoland.stage === 1 && altitudeAGL <= flare){
         autoland.stage++;
+
+        levelchange.setActive(false);
+
+        Autofunction.cache.save("flcinput", flcinputref);
+        Autofunction.cache.save("flcmode", flcmoderef);
+
+        return;
     }
 
-    if(autoland.stage >= 2){
-        if(autoland.stage === 2){
-            autoland.stage++;
-
-            levelchange.setActive(false);
-
-            Autofunction.cache.save("flcinput", flcinputref);
-            Autofunction.cache.save("flcmode", flcmoderef);
-
-            write("vs", -200);
-        }
+    if(autoland.stage === 2){
+        write("vs", -200);
 
         if(option !== "p"){
             write("spdon", false);
@@ -677,8 +677,7 @@ const autoland = new Autofunction("autoland", 1000, ["latref", "longref", "altre
         return;
     }
 
-    const altDiffrence = altitude - altref;
-    const currentVPA = Math.asin(altDiffrence / touchdownDistance) * toDeg;
+    const currentVPA = Math.asin(altitudeAGL / touchdownDistance) * toDeg;
 
     let mod = 2;
     let limit = 1;
@@ -699,7 +698,7 @@ const autoland = new Autofunction("autoland", 1000, ["latref", "longref", "altre
 
     Autofunction.cache.save("flcinput", vpaout);
 
-    const stopalt = altref + flare;
+    const stopalt = altref + flare - 1000;
     write("alt", stopalt);
 
     levelchange.setActive(true);

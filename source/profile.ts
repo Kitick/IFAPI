@@ -33,8 +33,13 @@ class ProfileStorage {
         const dom = document.getElementById(id);
         if(dom === null){return;}
 
-        dom.className = colorName;
-        setTimeout(() => {dom.className = "off";}, 500);
+        dom.classList.remove("off");
+        dom.classList.add(colorName);
+
+        setTimeout(() => {
+            dom.classList.remove(colorName);
+            dom.classList.add("off");
+        }, 500);
     }
 
     add(name = prompt("Enter the name of the profile:")):void {

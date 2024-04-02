@@ -114,7 +114,7 @@
 			<div class="panel" hidden>
 				<h2 class="module-name">AUTO TAKEOFF</h2>
 
-                <input id="rotate" type="number" placeholder="Rotation Speed VR (kts)" min="0" step="5">
+                <input id="rotate" type="number" placeholder="Rotation Speed (VR kts)" min="0" step="5">
                 <input id="climbspd" type="number" placeholder="Climb-Out Speed (kts)" min="0" step="5">
                 <input id="climbthrottle" type="number" placeholder="Climb Throttle (%)" min="0" max="100" step="1">
 				<div class="input-option-container">
@@ -207,7 +207,7 @@
             <div class="panel" hidden>
 				<h2 class="module-name">AUTO APPROACH AND LAND</h2>
                 <input id="spdref" type="number" step="5" placeholder="Landing Speed (VRef kts)" min="0">
-               	<input id="flare" type="number" placeholder="Flare Height (ft)" min="0" step="5">
+               	<input id="flare" type="number" placeholder="Flare Height (ft AGL)" min="0" step="5">
                	<input id="touchdown" type="number" placeholder="Touchdown Distance (ft)" min="0" step="100">
                	<input id="vparef" type="number" placeholder="VPA Refrence (deg)" min="0" max="6" step="0.1">
 
@@ -234,7 +234,7 @@
 				<select id="voices"></select>
 
 				<input id="utterancerate" type="number" placeholder="Voice Rate (1-4)" min="0.5" max="4">
-				<input id="minumuns" type="number" placeholder="Minumuns Altitude (ft)">
+				<input id="minumuns" type="number" placeholder="Minumuns Altitude (ft MSL)">
 				<button id="callout" class="width">CALLOUTS</button>
 				<button id="callouttest" onclick="speak('Testing')" class="off width">TEST</button>
 			</div>
