@@ -14,7 +14,7 @@ type patternLeg = "u" | "c" | "d" | "b" | "f";
 type funcCode = (data:{states:dataMap, inputs:dataMap}) => void;
 
 type fplStruct = {
-    bearing:number,
+	bearing:number,
 	desiredTrack:number,
 	distanceToDestination:number,
 	distanceToNext:number,
@@ -31,38 +31,38 @@ type fplStruct = {
 	xTrackErrorAngle:number,
 	totalDistance:number,
 	nextWaypointIndex:number,
-    result:number,
-    type:string,
+	result:number,
+	type:string,
 
-    detailedInfo:{
-        flightPlanId:string,
-        flightId:string,
-        flightPlanType:number,
-        lastUpdate:string,
-        waypoints:string[],
-        flightPlanItems:fplItemStruct[]
-    }
+	detailedInfo:{
+		flightPlanId:string,
+		flightId:string,
+		flightPlanType:number,
+		lastUpdate:string,
+		waypoints:string[],
+		flightPlanItems:fplItemStruct[]
+	}
 };
 
 type fplItemStruct = {
-    name:string,
-    type:number,
-    children:fplItemStruct[] | null,
-    identifier:string,
-    altitude:number,
-    location:{
-        Latitude:number,
-        Longitude:number,
-        AltitudeLight:number
-    };
+	name:string,
+	type:number,
+	children:fplItemStruct[] | null,
+	identifier:string,
+	altitude:number,
+	location:{
+		Latitude:number,
+		Longitude:number,
+		AltitudeLight:number
+	};
 };
 
 type vnavWaypoint = {
-    name:string | null,
-    index:number,
-    children:number,
-    altitude:number,
-    altitudeRestriction:number[],
-    altitudeRestrictionDistance:number,
-    restrictionLocation:latlong
+	name:string | null,
+	index:number,
+	children:number,
+	altitude:number,
+	altitudeRestriction:number[],
+	altitudeRestrictionDistance:number,
+	restrictionLocation:latlong
 };

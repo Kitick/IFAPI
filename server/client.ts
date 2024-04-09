@@ -2,22 +2,22 @@ const Net = require("net");
 const UDP = require("dgram");
 
 class Client {
-    #display:any;
-    #address:string = "";
-    #device:any = new Net.Socket();
-    #scanner:any|null = null;
-    #scannerTimeout:NodeJS.Timeout|null = null;
-    #active:boolean = false;
-    #dataBuffer:Buffer = Buffer.alloc(0);
-    #manifest:Map<string, Item> = new Map();
+	#display:any;
+	#address:string = "";
+	#device:any = new Net.Socket();
+	#scanner:any|null = null;
+	#scannerTimeout:NodeJS.Timeout|null = null;
+	#active:boolean = false;
+	#dataBuffer:Buffer = Buffer.alloc(0);
+	#manifest:Map<string, Item> = new Map();
 
 	constructor(display:any){
-        this.#display = display;
+		this.#display = display;
 
 		this.#initManifest();
 
 		this.#device.on("data", (buffer:Buffer) => {
-            console.log(this.#address + " Rx\t\t\t", buffer);
+			console.log(this.#address + " Rx\t\t\t", buffer);
 
 			this.#dataBuffer = Buffer.concat([this.#dataBuffer, buffer]);
 
@@ -33,22 +33,22 @@ class Client {
 		this.log("TCP Socket Created");
 	}
 
-    get #scanning(){return this.#scanner !== null;}
+	get #scanning(){return this.#scanner !== null;}
 
 	#initManifest():void {
 		this.#manifest = new Map();
 		this.addItem(new Item(-1, 4, "manifest"));
 	}
 
-    #closeScanner(){
-        if(!this.#scanning){return;}
+	#closeScanner(){
+		if(!this.#scanning){return;}
 
-        clearTimeout(this.#scannerTimeout as NodeJS.Timeout);
-        this.#scannerTimeout = null;
+		clearTimeout(this.#scannerTimeout as NodeJS.Timeout);
+		this.#scannerTimeout = null;
 
-        this.#scanner.close();
-        this.#scanner = null;
-    }
+		this.#scanner.close();
+		this.#scanner = null;
+	}
 
 	#findAddress():void {
 		if(this.#scanning){
@@ -58,22 +58,22 @@ class Client {
 
 		this.log("Searching for UDP packets...");
 
-        this.#scanner = UDP.createSocket("udp4");
+		this.#scanner = UDP.createSocket("udp4");
 
-        this.#scanner.on("message", (data:any, info:any) => {
+		this.#scanner.on("message", (data:any, info:any) => {
 			let address = info.address;
 			this.log(address + " UDP Packet Found");
 
 			this.#closeScanner();
-            this.connect(address);
+			this.connect(address);
 		});
 
 		this.#scanner.bind(15000);
 
-        this.#scannerTimeout = setTimeout(() => {
-            this.#closeScanner();
-            this.log("UDP search timed out\n\nTry using an IP address");
-        }, 10000);
+		this.#scannerTimeout = setTimeout(() => {
+			this.#closeScanner();
+			this.log("UDP search timed out\n\nTry using an IP address");
+		}, 10000);
 	}
 
 	#validate():void {
@@ -102,9 +102,9 @@ class Client {
 			stringData.forEach(raw => {
 				const itemRaw = raw.split(",");
 
-                const id = parseInt(itemRaw[0]);
-                const type = parseInt(itemRaw[1]) as bufferType;
-                const name = itemRaw[2];
+				const id = parseInt(itemRaw[0]);
+				const type = parseInt(itemRaw[1]) as bufferType;
+				const name = itemRaw[2];
 
 				const item = new Item(id, type, name);
 				this.addItem(item);
@@ -113,14 +113,14 @@ class Client {
 			this.log(this.#address + "\nManifest Built, API Ready");
 			this.#display.send("ready", this.#address);
 
-            return;
+			return;
 		}
 
-        const item = this.getItem(id.toString());
-        if(item === undefined){return;}
+		const item = this.getItem(id.toString());
+		if(item === undefined){return;}
 
-        item.buffer = data;
-        item.callback();
+		item.buffer = data;
+		item.callback();
 	}
 
 	#initalBuffer(id:number, state:number):Buffer {
@@ -132,35 +132,35 @@ class Client {
 		return buffer;
 	}
 
-    #serverLog(name:string, item:Item, buffer:Buffer, writing = false){
-        const equals = writing ? " =":"";
-        const value = writing ? item.value:"";
-        console.log(this.#address, "Tx", name, "(" + item.id.toString() + ")" + equals, value, buffer);
-    }
+	#serverLog(name:string, item:Item, buffer:Buffer, writing = false){
+		const equals = writing ? " =":"";
+		const value = writing ? item.value:"";
+		console.log(this.#address, "Tx", name, "(" + item.id.toString() + ")" + equals, value, buffer);
+	}
 
-    log(message:string):void {
+	log(message:string):void {
 		this.#display.send("log", message);
 		console.log(message);
 	}
 
-    connect(address = ""):void {
+	connect(address = ""):void {
 		if(this.#active){
 			this.log(this.#address + " TCP is already active");
-            this.#display.send("ready", this.#address);
+			this.#display.send("ready", this.#address);
 			return;
 		}
 
-        this.#address = address;
+		this.#address = address;
 
-        if(this.#address === ""){
+		if(this.#address === ""){
 			this.#findAddress();
 			return;
 		}
 
-        this.log(this.#address + " Attempting TCP Connection");
+		this.log(this.#address + " Attempting TCP Connection");
 
 		this.#device.connect({host:this.#address, port:10112}, () => {
-            this.#active = true;
+			this.#active = true;
 			this.log(this.#address + " TCP Established, Requesting Manifest");
 			this.readState("manifest");
 		});
@@ -170,27 +170,27 @@ class Client {
 		if(this.#scanning){this.#closeScanner();}
 
 		if(!this.#active){
-            this.log("TCP Closed");
-            return;
-        }
+			this.log("TCP Closed");
+			return;
+		}
 
-        this.#active = false;
+		this.#active = false;
 
-        this.#device.end(() => {
-            this.log(this.#address + " TCP Closed");
-            this.#address = "";
-        });
+		this.#device.end(() => {
+			this.log(this.#address + " TCP Closed");
+			this.#address = "";
+		});
 	}
 
 	readState(itemID:string, callback = () => {}):void {
 		const item = this.getItem(itemID);
-        if(item === undefined){callback(); return;}
+		if(item === undefined){callback(); return;}
 
-        if(item.type === -1){callback();}
-        else{
-            const length = item.addCallback(callback);
-            if(length > 1){return;}
-        }
+		if(item.type === -1){callback();}
+		else{
+			const length = item.addCallback(callback);
+			if(length > 1){return;}
+		}
 
 		const buffer = this.#initalBuffer(item.id, 0);
 
@@ -200,7 +200,7 @@ class Client {
 
 	writeState(itemID:string):void {
 		const item = this.getItem(itemID);
-        if(item === undefined){return;}
+		if(item === undefined){return;}
 
 		let buffer = this.#initalBuffer(item.id, 1);
 
@@ -211,17 +211,17 @@ class Client {
 	}
 
 	addItem(item:Item):void {
-        this.#manifest.set(item.id.toString(), item);
+		this.#manifest.set(item.id.toString(), item);
 		this.#manifest.set(item.name, item);
 
 		if(item.alias !== null){
-            this.#manifest.set(item.alias, item);
-        }
+			this.#manifest.set(item.alias, item);
+		}
 	}
 
-    getItem(itemID:string):Item|undefined {
-        const item = this.#manifest.get(itemID);
-        if(item === undefined){this.log(this.#address + " Invalid Item " + itemID);}
-        return item;
-    }
+	getItem(itemID:string):Item|undefined {
+		const item = this.#manifest.get(itemID);
+		if(item === undefined){this.log(this.#address + " Invalid Item " + itemID);}
+		return item;
+	}
 }
