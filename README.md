@@ -1,4 +1,4 @@
-# Welcome to Infinite Flight Copilot!
+# Welcome to Flight Sim Copilot!
 
 To get started, ensure:
 - You have the Infinite Flight Connect setting checked on.

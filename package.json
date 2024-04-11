@@ -1,5 +1,5 @@
 {
-  "name": "ifcopilot",
+  "name": "fscopilot",
   "version": "1.0.0",
   "description": "An automation assistant for Infinite Flight",
   "main": "index.js",
