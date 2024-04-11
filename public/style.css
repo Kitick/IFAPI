@@ -24,12 +24,12 @@ button{
 }
 
 p{
-    font-size:18px;
+	font-size:18px;
 }
 
 button.section{
-    width:15rem;
-    background:#4d4d4d;
+	width:15rem;
+	background:#4d4d4d;
 }
 
 button:hover{
@@ -67,9 +67,9 @@ input[type="number"]::-webkit-outer-spin-button{
 
 /* Firefox */
 input[type="number"] {
-    -webkit-appearance: textfield;
-    -moz-appearance: textfield;
-    appearance: textfield;
+	-webkit-appearance: textfield;
+	-moz-appearance: textfield;
+	appearance: textfield;
 }
 
 select{
@@ -107,7 +107,7 @@ select{
 }
 
 .width{
-    width: 15rem;
+	width: 15rem;
 }
 
 div[hidden]{
@@ -122,11 +122,11 @@ div[hidden]{
 	padding-top: 1.5rem;
 }
 
-.connect-button{
+#connectButton{
 	background-color: #038f03;
 }
 
-.close-button{
+#closeButton{
 	background-color: #990000;
 }
 

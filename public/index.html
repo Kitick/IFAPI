@@ -5,34 +5,34 @@
 
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
 
-        <script src="index.js" defer></script>
+		<script src="index.js" defer></script>
 
 		<link href="style.css" rel="stylesheet">
 	</head>
-    <body>
+	<body>
 		<div class="panel-container">
 			<div id="setup" class="panel">
 				<h2 class="module-name">SETUP</h2>
-        		<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Offline</span></h3>
+				<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Standby</span></h3>
 
-                <input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
-        		<div class="setup-button-container">	
-					<button onclick="bridge();" class="connect-button">Connect</button>
-        			<button onclick="closeBridge();" class="close-button">Close</button>
+				<input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
+				<div class="setup-button-container">	
+					<button id="connectButton" onclick="bridge();">Connect</button>
+					<button id="closeButton" onclick="closeBridge();">Close</button>
 				</div>
 
-                <h3>Ensure you are loaded in a flight before connecting<br><br>Restart the connection if you start a new flight</h3>
-                <h3 class="warning-text">
-                    Please ensure you monitor your flight <u>AT ALL TIMES</u> when using the automation functions offered. 
-                    <br>
-                    We are <u>NOT</u> responsible for any violations you may acquire while using them.
-                </h3>
+				<h3>Ensure you are loaded in a flight before connecting<br><br>Restart the connection if you start a new flight</h3>
+				<h3 class="warning-text">
+					Please ensure you monitor your flight <u>AT ALL TIMES</u> when using the automation functions offered. 
+					<br>
+					We are <u>NOT</u> responsible for any violations you may acquire while using them.
+				</h3>
 
-                <button class="off width" onclick="window.open('/guide.html');">USER GUIDE</button>
+				<button class="off width" onclick="window.open('/guide.html');">USER GUIDE</button>
 
-                <div class="button-guide">
+				<div class="button-guide">
 					<h3>Button Guide</h3>
 					<div class="example-buttons-container">
 						<button class="off example-buttons">Standby</button>
@@ -42,23 +42,23 @@
 					</div>
 				</div>
 
-                <h2 id="tooltip">Tooltip</h2>
+				<h2 id="tooltip">Tooltip</h2>
 			</div>
-            <div class="panel" hidden>
+			<div class="panel" hidden>
 				<h2 class="module-name">PROFILE CONFIGURATION</h2>
-                <button id="add" class="off width" onclick="storage.add();">NEW PROFILE</button>
-                <button id="save" class="off width" onclick="storage.save();">SAVE</button>
-                <select id="configselect"></select>
-                <button id="load" class="off width" onclick="storage.load();">LOAD</button>
+				<button id="add" class="off width" onclick="storage.add();">NEW PROFILE</button>
+				<button id="save" class="off width" onclick="storage.save();">SAVE</button>
+				<select id="configselect"></select>
+				<button id="load" class="off width" onclick="storage.load();">LOAD</button>
 				<button id="remove" class="off width" onclick="storage.remove();">DELETE</button>
 
-                <div class="checkbox-row">
-                    <input id="loadempty" type="checkbox" checked>
-                    <h3>Load Empty Values</h3>
-                </div>
+				<div class="checkbox-row">
+					<input id="loadempty" type="checkbox" checked>
+					<h3>Load Empty Values</h3>
+				</div>
 
-                <h3 class="module-name">CONFIG GUIDE</h3>
-                <div class="checkbox-container">
+				<h3 class="module-name">CONFIG GUIDE</h3>
+				<div class="checkbox-container">
 					<div class="checkbox-row">
 						<input id="configflaps" type="checkbox">
 						<h3>AUTO FLAPS</h3>
@@ -87,20 +87,20 @@
 				<h2 class="module-name">DYNAMIC SYSTEMS</h2>
 				<div class="dyn-button-container">
 					<div class="button-row">
-                        <button id="gear">GEAR</button>
+						<button id="gear">GEAR</button>
 						<button id="lights">LIGHTS</button>
 					</div>
 					<div class="button-row">
-                        <button id="spoilers">SPOILERS</button>
-                        <button id="autobrakes">BRAKES</button>
+						<button id="spoilers">SPOILERS</button>
+						<button id="autobrakes">BRAKES</button>
 					</div>
 					<div class="button-row">
-                        <button id="trim">TRIM</button>
+						<button id="trim">TRIM</button>
 						<button id="autospeed">SPEED</button>
 					</div>
-                    <div class="button-row">
-                        <button id="flaps">FLAPS</button>
-                        <button id="all" class="off" onclick="setAll(this.className);" type="checkbox">ALL</button>
+					<div class="button-row">
+						<button id="flaps">FLAPS</button>
+						<button id="all" class="off" onclick="setAll(this.className);" type="checkbox">ALL</button>
 					</div>
 				</div>
 				<div class="input-container">
@@ -108,74 +108,74 @@
 					<input id="flaphigh" type="number" placeholder="Clean Speed (kts)" min="0" step="5">
 					<input id="flapto" type="number" placeholder="Takeoff Flap (#)" min="0" step="1">
 					<input id="cruisespd" type="number" placeholder="Cruise SPD (kts)" min="0" step="5">
-					<input id="cruisealt" type="number" placeholder="Cruise ALT (ft)" min="0" step="5" hidden>
+					<input id="cruisealt" type="number" placeholder="Cruise ALT (fl)" min="0" step="5" hidden>
 				</div>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">AUTO TAKEOFF</h2>
 
-                <input id="rotate" type="number" placeholder="Rotation Speed VR (kts)" min="0" step="5">
-                <input id="climbspd" type="number" placeholder="Climb-Out Speed (kts)" min="0" step="5">
-                <input id="climbthrottle" type="number" placeholder="Climb Throttle (%)" min="0" max="100" step="1">
+				<input id="rotate" type="number" placeholder="Rotation Speed (VR kts)" min="0" step="5">
+				<input id="climbspd" type="number" placeholder="Climb-Out Speed (kts)" min="0" step="5">
+				<input id="climbthrottle" type="number" placeholder="Climb Throttle (%)" min="0" max="100" step="1">
 				<div class="input-option-container">
-					<input id="climbalt" class="input-option-l" type="number" placeholder="Level-off Altitude (ft)" min="0" step="100">
-                	<select id="climbtype" class="input-option-s">
-                        <option value="msl">MSL</option>
-                    	<option value="agl">AGL</option>
-                	</select>
+					<input id="climbalt" class="input-option-l" type="number" placeholder="Level-off Alt (ft)" min="0" step="100">
+					<select id="climbtype" class="input-option-s">
+						<option value="msl">MSL</option>
+						<option value="agl">AGL</option>
+					</select>
 				</div>
-                <div class="input-option-container">
+				<div class="input-option-container">
 					<input id="flcinputref" class="input-option-s" type="number" placeholder="Climb Rate" min="0">
-                	<select id="flcmoderef" class="input-option-l">
-                        <option value="f">V/S (ft/min)</option>
-                    	<option value="g">Gradient (ft/nm)</option>
+					<select id="flcmoderef" class="input-option-l">
+						<option value="f">V/S (ft/min)</option>
+						<option value="g">Gradient (ft/nm)</option>
 						<option value="v">VPA (deg)</option>
-                	</select>
+					</select>
 				</div>
 				<button id="takeoffconfig" class="width">CONFIGURE FOR TAKEOFF</button>
 				<button id="autotakeoff" class="width">AUTO TAKEOFF</button>
 				<button id="reject" class="width">REJECT TAKEOFF</button>
-              	<div class="checkbox-container">
+			  	<div class="checkbox-container">
 					<div class="checkbox-row">
 						<input id="takeoffspool" type="checkbox">
 						<h3>Spool First</h3>
 					</div>
 					<div class="checkbox-row">
-               			<input id="takeofflnav" type="checkbox">
+			   			<input id="takeofflnav" type="checkbox">
 						<h3>Engage LNAV</h3>
 					</div>
 					<div class="checkbox-row">
 						<input id="takeoffvnav" oninput="if(this.checked){this.checked = vnavSystem.validateInputs(true);}" type="checkbox">
 						<h3>Engage VNAV</h3>
-				    </div>
+					</div>
 				</div>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">FLIGHT DIRECTOR</h2>
-                <input id="flytolat" type="number" placeholder="Latitude (deg)" min="-90" max="90">
+				<input id="flytolat" type="number" placeholder="Latitude (deg)" min="-90" max="90">
 				<input id="flytolong" type="number" placeholder="Longitude (deg)" min="-180" max="180">
 				<input id="flytohdg" type="number" placeholder="Heading (deg)" min="0" max="360" step="1">
 				<button id="flyto" class="width">FLY TO</button>
-                <br><br>
+				<br><br>
 
 				<div class="input-option-container">
 					<input id="flcinput" class="input-option-s" type="number" placeholder="Climb Rate" min="0">
-                	<select id="flcmode" class="input-option-l">
-                        <option value="f">V/S (ft/min)</option>
-                    	<option value="g">Gradient (ft/nm)</option>
+					<select id="flcmode" class="input-option-l">
+						<option value="f">V/S (ft/min)</option>
+						<option value="g">Gradient (ft/nm)</option>
 						<option value="v">VPA (deg)</option>
-                	</select>
+					</select>
 				</div>
 				<button id="levelchange" class="width">LEVEL CHANGE</button>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">PATTERN WORK</h2>
-                <input id="updist" type="number" placeholder="Upwind Length (NM)" min="0" step="0.5">
+				<input id="updist" type="number" placeholder="Upwind Length (NM)" min="0" step="0.5">
 				<input id="downwidth" type="number" placeholder="Downwind Width (NM)" min="0" step="0.5">
 				<input id="finallength" type="number" placeholder="Final Length (NM)" min="0" step="0.5">
 				<input id="turnconst" type="number" placeholder="Turn Constant (degkts)" min="0" max="1000" step="5">
 
-                <div class="input-option-container">	
+				<div class="input-option-container">	
 					<select id="direction" class="input-option-s">
 						<option value="l">Left</option>
 						<option value="r">Right</option>
@@ -189,39 +189,39 @@
 					</select>
 				</div>
 				<button id="flypattern" class="width">FLY PATTERN</button>
-                <div class="checkbox-container">
+				<div class="checkbox-container">
 					<div class="checkbox-row">
 						<input id="approach" oninput="if(this.checked){this.checked = autoland.validateInputs(true);}" type="checkbox">
 						<h3>Approach on Final</h3>
 					</div>
 				</div>
 
-                <h3>RUNWAY REFRENCE</h3>
+				<h3>RUNWAY REFRENCE</h3>
 				<input id="latref" type="number" placeholder="Latitude Reference (deg)" min="-90" max="90">
 				<input id="longref" type="number" placeholder="Longitude Reference (deg)" min="-180" max="180">
-                <input id="altref" type="number" placeholder="Airport Elevation (ft)" min="0" step="1">
+				<input id="altref" type="number" placeholder="Airport Elevation (ft)" min="0" step="1">
 				<input id="hdgref" type="number" placeholder="HDG Reference (deg)" min="0" max="360" step="1">
 				<button id="markposition" class="width">MARK POSITION</button>
 				<button id="setrunway" class="width">SET RUNWAY</button>
 			</div>
-            <div class="panel" hidden>
+			<div class="panel" hidden>
 				<h2 class="module-name">AUTO APPROACH AND LAND</h2>
-                <input id="spdref" type="number" step="5" placeholder="Landing Speed VRef (kts)" min="0">
-               	<input id="flare" type="number" placeholder="Flare Height (ft)" min="0" step="5">
-               	<input id="touchdown" type="number" placeholder="Distance from threshold (ft)" min="0" step="100">
-               	<input id="vparef" type="number" placeholder="VPA Refrence (deg)" min="0" max="6" step="0.1">
+				<input id="spdref" type="number" step="5" placeholder="Landing Speed (VRef kts)" min="0">
+			   	<input id="flare" type="number" placeholder="Flare Height (ft AGL)" min="0" step="5">
+			   	<input id="touchdown" type="number" placeholder="Touchdown Distance (ft)" min="0" step="100">
+			   	<input id="vparef" type="number" placeholder="VPA Refrence (deg)" min="0" max="6" step="0.1">
 
-               	<select id="option">
-                   	<option value="l">Full Stop</option>
-                   	<option value="t">Touch & Go</option>
-                   	<option value="s">Stop & Go</option>
-                    <option value="p">Low Pass</option>
-               	</select>
+			   	<select id="option">
+				   	<option value="l">Full Stop</option>
+				   	<option value="t">Touch & Go</option>
+				   	<option value="s">Stop & Go</option>
+					<option value="p">Low Pass</option>
+			   	</select>
 
 				<button id="autoland" class="width">APPROACH</button>
-               	<button id="goaround" class="width">GO AROUND</button>
+			   	<button id="goaround" class="width">GO AROUND</button>
 			</div>
-            <div class="panel" hidden>
+			<div class="panel" hidden>
 				<h2 class="module-name">VNAV</h2>
 				<div id="waypoints"></div>
 
@@ -234,10 +234,10 @@
 				<select id="voices"></select>
 
 				<input id="utterancerate" type="number" placeholder="Voice Rate (1-4)" min="0.5" max="4">
-				<input id="minumuns" type="number" placeholder="Minumuns Altitude (ft)">
+				<input id="minumuns" type="number" placeholder="Minumuns Altitude (ft MSL)">
 				<button id="callout" class="width">CALLOUTS</button>
 				<button id="callouttest" onclick="speak('Testing')" class="off width">TEST</button>
 			</div>
 		</div>
-    </body>
+	</body>
 </html>

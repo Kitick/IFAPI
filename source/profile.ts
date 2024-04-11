@@ -1,98 +1,103 @@
 class ProfileStorage {
-    static defaultName:string = "#default";
+	static defaultName:string = "#default";
 
-    #selectDOM:HTMLSelectElement;
+	#selectDOM:HTMLSelectElement;
 
-    constructor(dom:HTMLSelectElement){
-        this.#selectDOM = dom;
+	constructor(dom:HTMLSelectElement){
+		this.#selectDOM = dom;
 
-        const name = ProfileStorage.defaultName;
+		const name = ProfileStorage.defaultName;
 
-        if(localStorage.getItem(name) === null){this.save(name);}
+		if(localStorage.getItem(name) === null){this.save(name);}
 
-        this.#build();
-        this.load(name);
-    }
+		this.#build();
+		this.load(name);
+	}
 
-    #build():void {
-        let configs = [];
-        for(let i = 0, length = localStorage.length; i < length; i++){
-            configs.push(localStorage.key(i) as string);
-        }
+	#build():void {
+		let configs = [];
+		for(let i = 0, length = localStorage.length; i < length; i++){
+			configs.push(localStorage.key(i) as string);
+		}
 
-        configs.sort();
+		configs.sort();
 
-        this.#selectDOM.innerHTML = "";
-        configs.forEach(name => {
-            let option = new Option(name, name);
-            this.#selectDOM.appendChild(option);
-        });
-    }
+		this.#selectDOM.innerHTML = "";
+		configs.forEach(name => {
+			let option = new Option(name, name);
+			this.#selectDOM.appendChild(option);
+		});
+	}
 
-    #flash(id:string, colorName:string):void {
-        const dom = document.getElementById(id);
-        if(dom === null){return;}
+	#flash(id:string, colorName:string):void {
+		const dom = document.getElementById(id);
+		if(dom === null){return;}
 
-        dom.className = colorName;
-        setTimeout(() => {dom.className = "off";}, 500);
-    }
+		dom.classList.remove("off");
+		dom.classList.add(colorName);
 
-    add(name = prompt("Enter the name of the profile:")):void {
-        while(name === ""){name = prompt("Name cannot be blank:");}
-        if(name === null){return;}
+		setTimeout(() => {
+			dom.classList.remove(colorName);
+			dom.classList.add("off");
+		}, 500);
+	}
 
-        this.save(name);
+	add(name = prompt("Enter the name of the profile:")):void {
+		while(name === ""){name = prompt("Name cannot be blank:");}
+		if(name === null){return;}
 
-        this.#build();
-        this.#selectDOM.value = name;
-    }
+		this.save(name);
 
-    save(name:string = this.#selectDOM.value):void {
-        if(name === ""){this.add(); return;}
+		this.#build();
+		this.#selectDOM.value = name;
+	}
 
-        const data = Autofunction.cache.loadAll();
+	save(name:string = this.#selectDOM.value):void {
+		if(name === ""){this.add(); return;}
 
-        let profile:any = {};
-        data.forEach((value, key) => {
-            profile[key] = value;
-        });
+		const data = Autofunction.cache.loadAll();
 
-        localStorage.setItem(name, JSON.stringify(profile));
+		let profile:any = {};
+		data.forEach((value, key) => {
+			profile[key] = value;
+		});
 
-        this.#flash("save", "active");
-    }
+		localStorage.setItem(name, JSON.stringify(profile));
 
-    load(name:string = this.#selectDOM.value):void {
-        const profileString = localStorage.getItem(name);
+		this.#flash("save", "active");
+	}
 
-        if(name === "" || profileString === null){this.#flash("load", "error"); return;}
+	load(name:string = this.#selectDOM.value):void {
+		const profileString = localStorage.getItem(name);
 
-        this.#selectDOM.value = name;
-        const loadEmpty = (document.getElementById("loadempty") as HTMLInputElement).checked;
+		if(name === "" || profileString === null){this.#flash("load", "error"); return;}
 
-        const profile = JSON.parse(profileString);
-        for(let id in profile){
-            let value = profile[id] as dataValue;
+		this.#selectDOM.value = name;
+		const loadEmpty = (document.getElementById("loadempty") as HTMLInputElement).checked;
 
-            if(value !== null){
-                let testValue = parseFloat(value.toString());
-                if(!isNaN(testValue)){value = testValue;}
-            }
-            else if(!loadEmpty){continue;}
+		const profile = JSON.parse(profileString);
+		for(let id in profile){
+			let value = profile[id] as dataValue;
 
-            Autofunction.cache.save(id, value);
-        }
+			if(value !== null){
+				let testValue = parseFloat(value.toString());
+				if(!isNaN(testValue)){value = testValue;}
+			}
+			else if(!loadEmpty){continue;}
 
-        this.#flash("load", "active");
-    }
+			Autofunction.cache.save(id, value);
+		}
 
-    remove(name:string = this.#selectDOM.value):void {
-        if(name === ""){return;}
+		this.#flash("load", "active");
+	}
 
-        const conf = confirm("Are you sure you want to delete: " + name);
-        if(!conf){return;}
+	remove(name:string = this.#selectDOM.value):void {
+		if(name === ""){return;}
 
-        localStorage.removeItem(name);
-        this.#build();
-    }
+		const conf = confirm("Are you sure you want to delete: " + name);
+		if(!conf){return;}
+
+		localStorage.removeItem(name);
+		this.#build();
+	}
 }
