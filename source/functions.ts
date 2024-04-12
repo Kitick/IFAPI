@@ -605,7 +605,7 @@ const goaround = new Autofunction("goaround", -1, ["climbalt", "climbspd", "clim
 	levelchange.setActive(true);
 });
 
-const autoland = new Autofunction("autoland", 1000, ["latref", "longref", "altref", "hdgref", "vparef", "flare", "touchdown", "option", "flcinputref", "flcmoderef"], ["latitude", "longitude", "altitude", "groundspeed", "onrunway"], [flypattern, goaround], data => {
+const autoland = new Autofunction("autoland", 500, ["latref", "longref", "altref", "hdgref", "vparef", "flare", "touchdown", "option", "flcinputref", "flcmoderef"], ["latitude", "longitude", "altitude", "groundspeed", "onrunway"], [flypattern, goaround], data => {
 	const inputs = data.inputs;
 	const states = data.states;
 

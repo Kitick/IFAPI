@@ -1,5 +1,5 @@
 class StateCache {
-	#data = new Map<string, {dom:inputHTML, value:dataValue}>();
+	#data:Map<string, {dom:inputHTML, value:dataValue}> = new Map();
 
 	constructor(){}
 
