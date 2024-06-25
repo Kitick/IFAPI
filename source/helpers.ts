@@ -154,57 +154,6 @@ function setAll(className:string):void {
 	all.className = state ? "active" : "off";
 }
 
-function config():void {
-	const configs = new Map<string, {instance:Autofunction, checked:boolean}>();
-
-	configs.set("autoflaps", {
-		instance: autoflaps,
-		checked: (document.getElementById("configflaps") as HTMLInputElement).checked
-	});
-	configs.set("autospeed", {
-		instance: autoflaps,
-		checked: (document.getElementById("configspeed") as HTMLInputElement).checked
-	});
-	configs.set("autotakeoff", {
-		instance: autoflaps,
-		checked: (document.getElementById("configtakeoff") as HTMLInputElement).checked
-	});
-	configs.set("flypattern", {
-		instance: autoflaps,
-		checked: (document.getElementById("configpattern") as HTMLInputElement).checked
-	});
-	configs.set("autoland", {
-		instance: autoflaps,
-		checked: (document.getElementById("configland") as HTMLInputElement).checked
-	});
-
-	let inputArray:string[] = [];
-
-	configs.forEach(config => {
-		if(!config.checked){return;}
-
-		const functions = [config.instance];
-		functions.concat(config.instance.getDependents());
-
-		functions.forEach(func => {
-			func.getInputs().forEach(id => {
-				if(inputArray.indexOf(id) !== -1){return;}
-				inputArray.push(id);
-			});
-		});
-	});
-
-	inputArray.forEach(input => {
-		const dom = document.getElementById(input) as HTMLInputElement|null;
-		if(dom === null || dom.type !== "number"){return;}
-
-		const value = prompt(dom.placeholder + "\nLeave blank to not change");
-		if(value === null || value === ""){return;}
-
-		domInterface.save(input, value);
-	});
-};
-
 function dependencyCheck(id:string):void {
 	if(id === "autoland" && autoland.isActive() && domInterface.load("approach")){
 		domInterface.save("approach", false);

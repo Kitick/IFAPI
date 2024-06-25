@@ -5,30 +5,30 @@
   "main": "index.js",
   "bin": "index.js",
   "scripts": {
-	"buildServer": "tsc -p server",
-	"postbuildServer": "terser index.js -o index.js -c -m --toplevel",
-	"buildSource": "tsc -p source",
-	"postbuildSource": "terser public/index.js -o public/index.js -c -m",
-	"build": "npm run buildServer",
-	"postbuild": "npm run buildSource",
-	"start": "electron-forge start",
-	"package": "electron-forge package",
-	"make": "electron-forge make"
+    "buildServer": "tsc -p server",
+    "postbuildServer": "terser index.js -o index.js -c -m --toplevel",
+    "buildSource": "tsc -p source",
+    "postbuildSource": "terser public/index.js -o public/index.js -c -m",
+    "build": "npm run buildServer",
+    "postbuild": "npm run buildSource",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "author": "Kevin Munson",
   "license": "ISC",
   "dependencies": {
-	"electron-squirrel-startup": "^1.0.0",
-	"net": "^1.0.2"
+    "electron-squirrel-startup": "^1.0.0",
+    "net": "^1.0.2"
   },
   "devDependencies": {
-	"@electron-forge/cli": "^7.3.1",
-	"@electron-forge/maker-deb": "^7.3.1",
-	"@electron-forge/maker-rpm": "^7.3.1",
-	"@electron-forge/maker-squirrel": "^7.3.1",
-	"@electron-forge/maker-zip": "^7.3.1",
-	"@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
-	"@electron-forge/plugin-fuses": "^7.3.1",
-	"electron": "^29.1.6"
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.3.1",
+    "@electron-forge/maker-rpm": "^7.3.1",
+    "@electron-forge/maker-squirrel": "^7.3.1",
+    "@electron-forge/maker-zip": "^7.3.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
+    "@electron-forge/plugin-fuses": "^7.3.1",
+    "electron": "^29.4.2"
   }
 }

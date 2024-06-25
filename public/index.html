@@ -59,32 +59,6 @@
 					<input id="loadempty" type="checkbox" checked>
 					<h3>Load Empty Values</h3>
 				</div>
-
-				<h3 class="module-name">CONFIG GUIDE</h3>
-				<div class="checkbox-container">
-					<div class="checkbox-row">
-						<input id="configflaps" type="checkbox">
-						<h3>AUTO FLAPS</h3>
-					</div>
-					<div class="checkbox-row">
-						<input id="configspeed" type="checkbox">
-						<h3>AUTO SPEED</h3>
-					</div>
-					<div class="checkbox-row">
-						<input id="configtakeoff" type="checkbox">
-						<h3>AUTO TAKEOFF</h3>
-					</div>
-					<div class="checkbox-row">
-						<input id="configpattern" type="checkbox">
-						<h3>FLY PATTERN</h3>
-					</div>
-					<div class="checkbox-row">
-						<input id="configland" type="checkbox">
-						<h3>AUTO LAND</h3>
-					</div>
-				</div>
-
-				<button id="config" class="off width" onclick="config();">CONFIGURE</button>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">DYNAMIC SYSTEMS</h2>
@@ -107,8 +81,8 @@
 					</div>
 				</div>
 				<div class="input-container">
-					<input id="flaplow" type="number" placeholder="Full Flaps Speed (kts)" min="0" step="5">
 					<input id="flaphigh" type="number" placeholder="Clean Speed (kts)" min="0" step="5">
+					<input id="flaplow" type="number" placeholder="Full Flaps Speed (kts)" min="0" step="5">
 					<input id="flapto" type="number" placeholder="Takeoff Flap (#)" min="0" step="1">
 					<input id="cruisespd" type="number" placeholder="Cruise SPD (kts)" min="0" step="5">
 					<input id="cruisealt" type="number" placeholder="Cruise ALT (fl)" min="0" step="5" hidden>
