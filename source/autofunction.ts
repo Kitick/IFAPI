@@ -1,20 +1,16 @@
 class Autofunction {
 	#button:HTMLElement;
 	#timeout:NodeJS.Timeout|null = null;
-	#states:dataMap = new Map();
 	#inputs:string[] = [];
 	#dependents:Autofunction[] = [];
-	#numStates = 0;
-	#validStates = 0;
-	#active = false;
-	#armed = false;
+	#active:boolean = false;
+	#armed:boolean = false;
 	#code:funcCode;
 
+	memory:Map<any, any> = new Map();
 	stage = 0;
 
-	static cache = new StateCache();
-
-	constructor(button:string, public delay:number, inputs:string[], states:string[], dependents:Autofunction[], code:funcCode){
+	constructor(button:string, public delay:number, inputs:string[], dependents:Autofunction[], code:funcCode){
 		const element = document.getElementById(button);
 		if(element === null){throw "Element " + button + " is undefined";}
 
@@ -22,7 +18,6 @@ class Autofunction {
 		this.#button.addEventListener("click", () => {dependencyCheck(button); this.setActive();});
 		this.#setButton();
 
-		this.#numStates = states.length;
 		this.#inputs = inputs;
 		this.#dependents = dependents;
 		this.#code = code;
@@ -42,11 +37,7 @@ class Autofunction {
 			});
 		});
 
-		states.forEach(state => {
-			this.#states.set(state, null);
-		});
-
-		Autofunction.cache.addArray(inputs);
+		domInterface.add(...inputs);
 	}
 
 	getInputs(){return this.#inputs}
@@ -88,56 +79,31 @@ class Autofunction {
 		classList.add(state);
 	}
 
-	#run():void {
+	async #run():Promise<void> {
 		const valid = this.validateInputs(true);
-
 		if(!valid){this.error(); return;}
 
-		this.#readStates(() => {
-			const wasArmed = this.#armed;
-			this.#armed = false;
+		const wasArmed = this.#armed;
+		this.#armed = false;
 
-			this.#code({
-				states:this.#states,
-				inputs:Autofunction.cache.loadArray(this.#inputs)
-			});
+		await this.#code(domInterface.load(...this.#inputs));
 
-			if(!this.#armed && wasArmed){
-				this.#setButton();
-			}
+		if(!this.#armed && wasArmed){
+			this.#setButton();
+		}
 
-			if(this.delay === -1){
-				this.setActive(false);
-				return;
-			}
-
-			if(this.#active){
-				this.#timeout = setTimeout(() => {this.#timeout = null; this.#run();}, this.delay);
-			}
-		});
-	}
-
-	#readStates(callback = () => {}):void {
-		if(this.#numStates === 0){
-			callback();
+		if(this.delay === -1){
+			this.setActive(false);
 			return;
 		}
 
-		this.#validStates = 0;
-		this.#states.forEach((value, state) => {
-			read(state, returnValue => {this.#stateReturn(state, returnValue, callback);});
-		});
-	}
-
-	#stateReturn(state:string, value:stateValue, callback = () => {}):void {
-		this.#states.set(state, value);
-		this.#validStates++;
-
-		if(this.#validStates === this.#numStates){callback();}
+		if(this.#active){
+			this.#timeout = setTimeout(() => {this.#timeout = null; this.#run();}, this.delay);
+		}
 	}
 
 	validateInputs(doError = false):boolean {
-		let valid = Autofunction.cache.isValidArray(this.#inputs, doError);
+		let valid = domInterface.isValid(doError, ...this.#inputs);
 
 		this.#dependents.forEach(dependent => {
 			valid = dependent.validateInputs() && valid;

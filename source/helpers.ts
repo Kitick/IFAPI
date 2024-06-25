@@ -1,7 +1,57 @@
-function cyclical(value:number, range = 360):number {
-	value = ((value % range) + range) % range;
-	return value;
+class PID {
+	#lastError = 0;
+	#integral = 0;
+	#filter = 0.1;
+
+	constructor(public Kp:number = 0, public Ki:number = 0, public Kd:number = 0, public outputMin:number = -Infinity, public outputMax:number = Infinity, public cyclical:boolean = false){}
+
+	#normalize(value:number):number {
+		const range = this.outputMax - this.outputMin;
+		const normalized = ((value - this.outputMin) % range + range) % range + this.outputMin;
+		return normalized;
+	}
+
+	#correctCycle(value:number):number {
+		const range = this.outputMax - this.outputMin;
+		const normalized = this.#normalize(value);
+
+		if(normalized > range / 2){
+			return normalized - range;
+		}
+
+		return normalized;
+	}
+
+	update(current:number, target:number, dt:number):number{
+		let error = target - current;
+
+		if(this.cyclical){
+			current = this.#normalize(current);
+			target = this.#normalize(target);
+
+			error = target - current;
+			error = this.#correctCycle(error);
+		}
+
+		this.#integral += this.#filter * (error - this.#integral);
+		const derivitive = (error - this.#lastError) / dt;
+
+		this.#lastError = error;
+
+		const p = this.Kp * error;
+		const i = this.Ki * this.#integral;
+		const d = this.Kd * derivitive;
+
+		let output = p + i + d;
+
+		output = Math.max(output, this.outputMin);
+		output = Math.min(output, this.outputMax);
+
+		return output;
+	}
 }
+
+const NMtoFT = 6076.12;
 
 function dms(deg:number, min = 0, sec = 0):number {
 	return Math.sign(deg) * (Math.abs(deg) + (min / 60) + (sec / 3600));
@@ -151,13 +201,13 @@ function config():void {
 		const value = prompt(dom.placeholder + "\nLeave blank to not change");
 		if(value === null || value === ""){return;}
 
-		Autofunction.cache.save(input, value);
+		domInterface.save(input, value);
 	});
 };
 
 function dependencyCheck(id:string):void {
-	if(id === "autoland" && autoland.isActive() && Autofunction.cache.load("approach")){
-		Autofunction.cache.save("approach", false);
+	if(id === "autoland" && autoland.isActive() && domInterface.load("approach")){
+		domInterface.save("approach", false);
 	}
 	else if(id === "flypattern" && flypattern.isActive()){
 		autoland.setActive(false);

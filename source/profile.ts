@@ -42,9 +42,14 @@ class ProfileStorage {
 		}, 500);
 	}
 
-	add(name = prompt("Enter the name of the profile:")):void {
-		while(name === ""){name = prompt("Name cannot be blank:");}
-		if(name === null){return;}
+	add(name?:string):void {
+		const nameInput = document.getElementById("profilename") as HTMLInputElement;
+
+		if(name === undefined){
+			name = nameInput.value as string;
+		}
+
+		nameInput.value = "";
 
 		this.save(name);
 
@@ -55,7 +60,7 @@ class ProfileStorage {
 	save(name:string = this.#selectDOM.value):void {
 		if(name === ""){this.add(); return;}
 
-		const data = Autofunction.cache.loadAll();
+		const data = domInterface.loadAll();
 
 		let profile:any = {};
 		data.forEach((value, key) => {
@@ -64,7 +69,7 @@ class ProfileStorage {
 
 		localStorage.setItem(name, JSON.stringify(profile));
 
-		this.#flash("save", "active");
+		this.#flash("profilesave", "active");
 	}
 
 	load(name:string = this.#selectDOM.value):void {
@@ -85,10 +90,10 @@ class ProfileStorage {
 			}
 			else if(!loadEmpty){continue;}
 
-			Autofunction.cache.save(id, value);
+			domInterface.save(id, value);
 		}
 
-		this.#flash("load", "active");
+		this.#flash("profileload", "active");
 	}
 
 	remove(name:string = this.#selectDOM.value):void {

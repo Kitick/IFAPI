@@ -80,7 +80,7 @@ class Item {
 	}
 
 	callback():void {
-		this.#callbacks.forEach(callback => {callback();});
+		this.#callbacks.forEach(clientCallback => {clientCallback();});
 		this.#callbacks = [];
 	}
 }

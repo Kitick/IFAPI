@@ -18,18 +18,36 @@ server.on("readback", ([id, value]:[string, stateValue]) => {
 	readbacks.delete(id);
 });
 
-function read(command:string, callback = (value:stateValue) => {}):void {
-	let index = 0;
-	let id;
+async function readAsync(...commands:string[]):Promise<stateValue[]> {
+	let promises:Promise<stateValue>[] = [];
 
-	while(true){
-		id = command + index;
-		if(!readbacks.has(id)){break;}
-		index++;
-	}
+	commands.forEach(command => {
+		promises.push(new Promise(resolve => {
+			let index = 0;
+			let id = "";
 
-	readbacks.set(id, callback);
-	server.send("read", command, id);
+			while(true){
+				id = command + index.toString();
+				if(!readbacks.has(id)){break;}
+				index++;
+			}
+
+			readbacks.set(id, resolve);
+			server.send("read", command, id);
+		}));
+	});
+
+	return Promise.all(promises);
+}
+
+async function readLog(...commands:string[]):Promise<void> {
+	await readAsync(...commands).then(values => {
+		console.log(values.join(", "));
+	});
+}
+
+function write(command:string, value:stateValue):void {
+	server.send("write", command, value);
 }
 
 function bridge():void {
@@ -56,16 +74,6 @@ function closeBridge():void {
 	server.send("break");
 }
 
-function readLog(command:string):void {
-	read(command, (value:stateValue) => {
-		console.log(value);
-	});
-}
-
-function write(command:string, value:stateValue){
-	server.send("write", command, value);
-}
-
 function setHidden(hidden:boolean):void {
 	for(let i = 1, length = panels.length; i < length; i++){
 		const panel = panels[i] as HTMLDivElement;
@@ -88,10 +96,12 @@ function log(message:string){
 	console.log(message);
 }
 
+const domInterface = new DOMInterface();
+
 const statLog = document.getElementById("status") as HTMLSpanElement;
 const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;
 
-const storage = new ProfileStorage(document.getElementById("configselect") as HTMLSelectElement);
+const storage = new ProfileStorage(document.getElementById("profileselect") as HTMLSelectElement);
 
 const select = document.getElementById("voices") as HTMLSelectElement;
 const voices = speechSynthesis.getVoices();

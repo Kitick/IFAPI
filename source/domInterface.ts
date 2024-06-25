@@ -1,4 +1,4 @@
-class StateCache {
+class DOMInterface {
 	#data:Map<string, {dom:inputHTML, value:dataValue}> = new Map();
 
 	constructor(){}
@@ -25,7 +25,7 @@ class StateCache {
 		setTimeout(() => {dom.classList.remove("error");}, 2000);
 	}
 
-	addArray(ids:string[]):void {
+	add(...ids:string[]):void {
 		ids.forEach(id => {
 			if(this.#data.get(id) !== undefined){return;}
 
@@ -43,24 +43,17 @@ class StateCache {
 		});
 	}
 
-	add(...ids:string[]):void {this.addArray(ids);}
-
-	loadArray(ids:string[]):dataMap {
-		let returnMap:dataMap = new Map();
+	load(...ids:string[]):dataValue[] {
+		let returnArray:dataValue[] = [];
 
 		ids.forEach(id => {
-			const value = this.load(id);
+			const value = this.#data.get(id)?.value;
 			if(value === undefined){return;}
 
-			returnMap.set(id, value);
+			returnArray.push(value);
 		});
 
-		return returnMap;
-	}
- 
-	load(id:string):dataValue|undefined {
-		const value = this.#data.get(id)?.value;
-		return value;
+		return returnArray;
 	}
 
 	loadAll():dataMap {
@@ -89,23 +82,20 @@ class StateCache {
 		dom.value = value.toString();
 	}
 
-	isValid(id:string, doError = false):boolean {
-		const refrence = this.#data.get(id);
-		if(refrence === undefined){return false;}
+	isValid(doError = false, ...ids:string[]):boolean {
+		let overall = true;
 
-		const valid = refrence.value !== null;
-
-		if(!valid && doError){this.#error(refrence.dom);}
-
-		return valid;
-	}
-
-	isValidArray(ids:string[], doError = false):boolean {
-		let valid = true;
 		ids.forEach(id => {
-			valid = this.isValid(id, doError) && valid;
+			const refrence = this.#data.get(id);
+			if(refrence === undefined){return false;}
+
+			const valid = refrence.value !== null;
+
+			if(!valid && doError){this.#error(refrence.dom);}
+
+			overall = valid && overall;
 		});
 
-		return valid;
+		return overall;
 	}
 }

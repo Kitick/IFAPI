@@ -18,14 +18,14 @@
 				<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Standby</span></h3>
 
 				<input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
-				<div class="setup-button-container">	
+				<div class="setup-button-container">
 					<button id="connectButton" onclick="bridge();">Connect</button>
 					<button id="closeButton" onclick="closeBridge();">Close</button>
 				</div>
 
 				<h3>Ensure you are loaded in a flight before connecting<br><br>Restart the connection if you start a new flight</h3>
 				<h3 class="warning-text">
-					Please ensure you monitor your flight <u>AT ALL TIMES</u> when using the automation functions offered. 
+					Please ensure you monitor your flight <u>AT ALL TIMES</u> when using the automation functions offered.
 					<br>
 					We are <u>NOT</u> responsible for any violations you may acquire while using them.
 				</h3>
@@ -46,11 +46,14 @@
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">PROFILE CONFIGURATION</h2>
-				<button id="add" class="off width" onclick="storage.add();">NEW PROFILE</button>
-				<button id="save" class="off width" onclick="storage.save();">SAVE</button>
-				<select id="configselect"></select>
-				<button id="load" class="off width" onclick="storage.load();">LOAD</button>
-				<button id="remove" class="off width" onclick="storage.remove();">DELETE</button>
+				<input id="profilename" placeholder="New Profile Name">
+				<button id="profileadd" class="off width" onclick="storage.add();">ADD NEW PROFILE</button>
+				<br><br>
+
+				<button id="profilesave" class="off width" onclick="storage.save();">SAVE</button>
+				<select id="profileselect"></select>
+				<button id="profileload" class="off width" onclick="storage.load();">LOAD</button>
+				<button id="profileremove" class="off width" onclick="storage.remove();">DELETE</button>
 
 				<div class="checkbox-row">
 					<input id="loadempty" type="checkbox" checked>
@@ -175,7 +178,7 @@
 				<input id="finallength" type="number" placeholder="Final Length (NM)" min="0" step="0.5">
 				<input id="turnconst" type="number" placeholder="Turn Constant (degkts)" min="0" max="1000" step="5">
 
-				<div class="input-option-container">	
+				<div class="input-option-container">
 					<select id="direction" class="input-option-s">
 						<option value="l">Left</option>
 						<option value="r">Right</option>
