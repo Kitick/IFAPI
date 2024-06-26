@@ -43,7 +43,7 @@ class ProfileStorage {
 	}
 
 	add(name?:string):void {
-		const nameInput = document.getElementById("profilename") as HTMLInputElement;
+		const nameInput = document.getElementById("profile-name") as HTMLInputElement;
 
 		if(name === undefined){
 			name = nameInput.value as string;
@@ -69,13 +69,13 @@ class ProfileStorage {
 
 		localStorage.setItem(name, JSON.stringify(profile));
 
-		this.#flash("profilesave", "active");
+		this.#flash("profile-save", "active");
 	}
 
 	load(name:string = this.#selectDOM.value):void {
 		const profileString = localStorage.getItem(name);
 
-		if(name === "" || profileString === null){this.#flash("load", "error"); return;}
+		if(name === "" || profileString === null){this.#flash("profile-load", "error"); return;}
 
 		this.#selectDOM.value = name;
 		const loadEmpty = (document.getElementById("loadempty") as HTMLInputElement).checked;
@@ -93,7 +93,7 @@ class ProfileStorage {
 			domInterface.write(id, value);
 		}
 
-		this.#flash("profileload", "active");
+		this.#flash("profile-load", "active");
 	}
 
 	remove(name:string = this.#selectDOM.value):void {
