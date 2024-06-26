@@ -366,44 +366,6 @@ const autotakeoff = new Autofunction("autotakeoff", 500, ["rotate", "climbspd", 
 	autotakeoff.stage = stage;
 });
 
-/*
-const flytoDelay = 1000;
-const flyto = new Autofunction("flyto", flytoDelay, ["flytolat", "flytolong", "flytohdg"], ["latitude", "longitude", "variation"], [], async domInputs => {
-
-
-
-	const flytolat = domInputs.get("flytolat") as number;
-	const flytolong = domInputs.get("flytolong") as number;
-	const flytohdg = domInputs.get("flytohdg") as number;
-
-	const latitude = states.get("latitude") as number;
-	const longitude = states.get("longitude") as number;
-	const variation = states.get("variation") as number;
-
-	const distance = calcLLdistance({lat:latitude, long:longitude}, {lat:flytolat, long:flytolong});
-
-	if(distance < 1){
-		flyto.setActive(false);
-		return;
-	}
-
-	let pid = flyto.memory.get("pid") as PID | undefined;
-	if(pid === undefined){
-		pid = new PID(1, 0, 0, 0, 360, true);
-		flyto.memory.set("pid", pid);
-	}
-
-	const deltaY = flytolat - latitude;
-	const deltaX = (flytolong - longitude) * Math.cos((latitude + flytolat) * 0.5 * toRad);
-	const course = Math.atan2(deltaX, deltaY) * toDeg - variation;
-
-	const courseOut = pid.update(course, flytohdg, flytoDelay / 1000);
-
-	console.log(course, flytohdg, courseOut);
-	write("hdg", courseOut);
-});
-*/
-
 const flyto = new Autofunction("flyto", 1000, ["flytolat", "flytolong", "flytohdg"], [], async domInputs => {
 
 	const states = await readAsync("latitude", "longitude", "variation", "groundspeed", "wind", "winddir");
@@ -423,37 +385,56 @@ const flyto = new Autofunction("flyto", 1000, ["flytolat", "flytolong", "flytohd
 		return;
 	}
 
-	// Direct To
-	const deltaY = flytolat - latitude;
-	const deltaX = (flytolong - longitude) * Math.cos((latitude + flytolat) * 0.5 * toRad);
-	let course = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
+	// X and Y are in nm
+    const deltaY = 60 * (flytolat - latitude);
+    const deltaX = 60 * (flytolong - longitude) * Math.cos((latitude + flytolat) * 0.5 * toRad);
+    let course = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
 
+    let diffrence = cyclical(flytohdg) - course;
+
+    if(diffrence > 180){diffrence -= 360;}
+    else if(diffrence < -180){diffrence += 360;}
+
+    // Course Correction
+    if(Math.abs(diffrence) < 5){course -= -0.1 * diffrence ** 3 + 8.5 * diffrence;}
+    else{course -= 30 * Math.sign(diffrence);}
+
+	/*
 	const hdgTarget = cyclical(flytohdg);
-	let diffrence = hdgTarget - course;
+	const hdgMath = hdgTarget * toRad; // nautical angle
 
-	if(diffrence > 180){diffrence -= 360;}
-	else if(diffrence < -180){diffrence += 360;}
+	const direct = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
+	const xtrackX = (deltaX + deltaY * Math.tan(hdgMath)) * Math.cos(hdgMath) ** 2;
+	const xtrackY = xtrackX * (Math.tan(hdgMath));
 
-	// Course Correction
-	if(Math.abs(diffrence) < 5){course -= -0.1 * diffrence ** 3 + 8.5 * diffrence;}
-	else{course -= 30 * Math.sign(diffrence);}
+	const xtrack = ((xtrackX - deltaX) ** 2 + (xtrackY - deltaY) ** 2) ** 0.5;
+	const direction = Math.sign(direct - hdgTarget);
+
+	let trackCourse = hdgTarget + 45 * direction;
+
+	if(xtrack < 1){
+		trackCourse = hdgTarget + (30/1) * xtrack * direction;
+	}
+	else if(xtrack < 2){
+		trackCourse = hdgTarget + 30 * direction;
+	}
+
+	trackCourse = cyclical(trackCourse);
+	*/
 
 	// Wind Correction
 	const windmag = cyclical(winddir - variation + 180);
-	let courseMath = -course + 90;
-	let windMath = -windmag + 90;
-
-	courseMath *= toRad;
-	windMath *= toRad;
+	const courseMath = (-course + 90) * toRad;
+	const windMath = (-windmag + 90) * toRad;
 
 	const courseX = 2 * groundspeed * Math.cos(courseMath);
 	const courseY = 2 * groundspeed * Math.sin(courseMath);
 	const windX = wind * Math.cos(windMath);
 	const windY = wind * Math.sin(windMath);
 
-	course = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
+	const correction = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
 
-	write("hdg", course);
+	write("hdg", correction);
 });
 
 const flypattern = new Autofunction("flypattern", 1000, ["latref", "longref", "hdgref", "updist", "downwidth", "finallength", "turnconst", "leg", "direction", "approach"], [], async domInputs => {
