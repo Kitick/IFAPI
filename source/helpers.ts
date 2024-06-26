@@ -1,39 +1,45 @@
-class PID {
+class PIDController {
 	#lastError = 0;
 	#integral = 0;
-	#filter = 0.1;
 
-	constructor(public Kp:number = 0, public Ki:number = 0, public Kd:number = 0, public outputMin:number = -Infinity, public outputMax:number = Infinity, public cyclical:boolean = false){}
+	constructor(public Kp:number = 0, public Ki:number = 0, public Kd:number = 0, public minValue:number = -Infinity, public maxValue:number = Infinity, public cyclical:boolean = false){}
 
-	#normalize(value:number):number {
-		const range = this.outputMax - this.outputMin;
-		const normalized = ((value - this.outputMin) % range + range) % range + this.outputMin;
+	#modulus(value:number):number {
+		const range = this.maxValue - this.minValue;
+		const normalized = ((value - this.minValue) % range + range) % range + this.minValue;
 		return normalized;
 	}
 
-	#correctCycle(value:number):number {
-		const range = this.outputMax - this.outputMin;
-		const normalized = this.#normalize(value);
+	#shorterDistance(value:number):number {
+		const range = (this.maxValue - this.minValue);
 
-		if(normalized > range / 2){
-			return normalized - range;
+		const sign = Math.sign(value);
+		const normal = this.#modulus(value);
+
+		if(normal > range / 2){
+			return (range - normal) * -sign;
 		}
 
-		return normalized;
+		return value;
 	}
 
 	update(current:number, target:number, dt:number):number{
 		let error = target - current;
 
 		if(this.cyclical){
-			current = this.#normalize(current);
-			target = this.#normalize(target);
+			current = this.#modulus(current);
+			target = this.#modulus(target);
 
 			error = target - current;
-			error = this.#correctCycle(error);
+			error = this.#shorterDistance(error);
 		}
 
-		this.#integral += this.#filter * (error - this.#integral);
+		const integralError = error * dt;
+		this.#integral += integralError;
+
+		this.#integral = Math.max(this.#integral, this.minValue / this.Ki);
+		this.#integral = Math.min(this.#integral, this.maxValue / this.Ki);
+
 		const derivitive = (error - this.#lastError) / dt;
 
 		this.#lastError = error;
@@ -44,12 +50,28 @@ class PID {
 
 		let output = p + i + d;
 
-		output = Math.max(output, this.outputMin);
-		output = Math.min(output, this.outputMax);
+		output = Math.max(output, this.minValue);
+		output = Math.min(output, this.maxValue);
 
 		return output;
 	}
 }
+
+////////////////// TESTING ONLY
+let speedPID = new PIDController(5, 0.5, 5, -100, 100);
+async function updateSpeed(target:number, dt:number):Promise<void> {
+	const [current] = await readAsync("airspeed") as [number];
+	const output = speedPID.update(current, target, dt);
+	write("throttle", output);
+}
+
+let updateTimeout:NodeJS.Timeout;
+function constantUpdate(target:number):void {
+	clearTimeout(updateTimeout);
+	updateSpeed(target, 0.1);
+	updateTimeout = setTimeout(() => {constantUpdate(target);}, 100);
+}
+//////////////////////
 
 const NMtoFT = 6076.12;
 
@@ -155,8 +177,8 @@ function setAll(className:string):void {
 }
 
 function dependencyCheck(id:string):void {
-	if(id === "autoland" && autoland.isActive() && domInterface.load("approach")){
-		domInterface.save("approach", false);
+	if(id === "autoland" && autoland.isActive() && domInterface.read("approach")){
+		domInterface.write("approach", false);
 	}
 	else if(id === "flypattern" && flypattern.isActive()){
 		autoland.setActive(false);
