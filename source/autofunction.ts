@@ -1,6 +1,7 @@
 class Autofunction {
 	#button:HTMLElement;
 	#timeout:NodeJS.Timeout|null = null;
+	#states:string[] = [];
 	#inputs:string[] = [];
 	#dependents:Autofunction[] = [];
 	#active:boolean = false;
@@ -10,7 +11,7 @@ class Autofunction {
 	memory:Map<any, any> = new Map();
 	stage = 0;
 
-	constructor(button:string, public delay:number, inputs:string[], dependents:Autofunction[], code:funcCode){
+	constructor(button:string, public delay:number, states:string[], inputs:string[], dependents:Autofunction[], code:funcCode){
 		const element = document.getElementById(button);
 		if(element === null){throw "Element " + button + " is undefined";}
 
@@ -18,6 +19,7 @@ class Autofunction {
 		this.#button.addEventListener("click", () => {dependencyCheck(button); this.setActive();});
 		this.#setButton();
 
+		this.#states = states;
 		this.#inputs = inputs;
 		this.#dependents = dependents;
 		this.#code = code;
@@ -86,7 +88,10 @@ class Autofunction {
 		const wasArmed = this.#armed;
 		this.#armed = false;
 
-		await this.#code(domInterface.load(...this.#inputs));
+		const states = await readAsync(...this.#states);
+		const inputs = domInterface.read(...this.#inputs);
+
+		this.#code(states, inputs);
 
 		if(!this.#armed && wasArmed){
 			this.#setButton();
@@ -98,12 +103,15 @@ class Autofunction {
 		}
 
 		if(this.#active){
-			this.#timeout = setTimeout(() => {this.#timeout = null; this.#run();}, this.delay);
+			this.#timeout = setTimeout(() => {
+				this.#timeout = null;
+				this.#run();
+			}, this.delay);
 		}
 	}
 
 	validateInputs(doError = false):boolean {
-		let valid = domInterface.isValid(doError, ...this.#inputs);
+		let valid = domInterface.validate(doError, ...this.#inputs);
 
 		this.#dependents.forEach(dependent => {
 			valid = dependent.validateInputs() && valid;

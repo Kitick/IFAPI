@@ -11,7 +11,7 @@ type altType = "msl" | "agl";
 type climbType = "f" | "g" | "v";
 type patternLeg = "u" | "c" | "d" | "b" | "f";
 
-type funcCode = (data:dataValue[]) => Promise<void>;
+type funcCode = (states:stateValue[], inputs:dataValue[]) => void;
 
 type fplStruct = {
 	bearing:number,
