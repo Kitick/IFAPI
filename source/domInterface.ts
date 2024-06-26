@@ -43,7 +43,7 @@ class DOMInterface {
 		});
 	}
 
-	load(...ids:string[]):dataValue[] {
+	read(...ids:string[]):dataValue[] {
 		let returnArray:dataValue[] = [];
 
 		ids.forEach(id => {
@@ -56,7 +56,7 @@ class DOMInterface {
 		return returnArray;
 	}
 
-	loadAll():dataMap {
+	readAll():dataMap {
 		let returnMap:dataMap = new Map();
 
 		this.#data.forEach((refrence, key) => {
@@ -66,7 +66,7 @@ class DOMInterface {
 		return returnMap;
 	}
 
-	save(id:string, value:dataValue):void {
+	write(id:string, value:dataValue):void {
 		const refrence = this.#data.get(id);
 		if(refrence === undefined){return;}
 
@@ -82,7 +82,7 @@ class DOMInterface {
 		dom.value = value.toString();
 	}
 
-	isValid(doError = false, ...ids:string[]):boolean {
+	validate(doError = false, ...ids:string[]):boolean {
 		let overall = true;
 
 		ids.forEach(id => {
