@@ -1,9 +1,14 @@
 class Autofunction {
-	#button:HTMLElement;
+	#triggerDOM:HTMLElement;
+	#statusDOM:HTMLElement|null;
+	#status!:string;
+
 	#timeout:NodeJS.Timeout|null = null;
+
 	#states:string[] = [];
 	#inputs:string[] = [];
 	#dependents:Autofunction[] = [];
+
 	#active:boolean = false;
 	#armed:boolean = false;
 	#code:funcCode;
@@ -11,13 +16,19 @@ class Autofunction {
 	memory:Map<any, any> = new Map();
 	stage = 0;
 
-	constructor(button:string, public delay:number, states:string[], inputs:string[], dependents:Autofunction[], code:funcCode){
-		const element = document.getElementById(button);
-		if(element === null){throw "Element " + button + " is undefined";}
+	constructor(triggerID:string, public delay:number, states:string[], inputs:string[], dependents:Autofunction[], code:funcCode){
+		const triggerDOM = document.getElementById(triggerID);
+		this.#statusDOM = document.getElementById(triggerID + "-status");
+		this.status = "Idle";
 
-		this.#button = element as HTMLElement;
-		this.#button.addEventListener("click", () => {dependencyCheck(button); this.setActive();});
-		this.#setButton();
+		if(triggerDOM === null){throw "Element " + triggerID + " is undefined";}
+
+		this.#triggerDOM = triggerDOM as HTMLElement;
+		this.#triggerDOM.addEventListener("click", () => {
+			dependencyCheck(triggerID);
+			this.setActive();
+		});
+		this.#setTrigger();
 
 		this.#states = states;
 		this.#inputs = inputs;
@@ -42,8 +53,17 @@ class Autofunction {
 		domInterface.add(...inputs);
 	}
 
-	getInputs(){return this.#inputs}
-	getDependents(){return this.#dependents;}
+	set status(message:string){
+		this.#status = message;
+
+		if(this.#statusDOM === null){return;}
+
+		const text = "STATUS:\n\n" + message;
+
+		if(this.#statusDOM.innerText !== text){this.#statusDOM.innerText = text;}
+	}
+
+	get status():string {return this.#status;}
 
 	isActive(){return this.#active;}
 
@@ -51,26 +71,23 @@ class Autofunction {
 		if(this.#active === state){return;}
 
 		this.#active = state;
-		this.#setButton();
+		this.#setTrigger();
 
 		if(this.#active){
 			this.stage = 0;
 			this.#run();
 			return;
 		}
-		else if(this.#timeout !== null){
-			clearTimeout(this.#timeout);
-			this.#timeout = null;
-		}
+
+		clearTimeout(this.#timeout ?? undefined);
+		this.#timeout = null;
 	}
 
-	#setButton(state:string = ""):void {
-		const classList = this.#button.classList;
+	#setTrigger(state?:string):void {
+		const classList = this.#triggerDOM.classList;
 		const states = ["off", "active", "armed", "error"];
 
-		if(state === ""){
-			state = this.isActive() ? "active" : "off";
-		}
+		if(state === undefined){state = this.isActive() ? "active" : "off";}
 
 		if(classList.contains(state)){return;}
 
@@ -83,7 +100,10 @@ class Autofunction {
 
 	async #run():Promise<void> {
 		const valid = this.validateInputs(true);
-		if(!valid){this.error(); return;}
+		if(!valid){
+			this.error("Missing Inputs");
+			return;
+		}
 
 		const wasArmed = this.#armed;
 		this.#armed = false;
@@ -94,7 +114,7 @@ class Autofunction {
 		this.#code(states, inputs);
 
 		if(!this.#armed && wasArmed){
-			this.#setButton();
+			this.#setTrigger();
 		}
 
 		if(this.delay === -1){
@@ -122,12 +142,14 @@ class Autofunction {
 
 	arm():void {
 		this.#armed = true;
-		this.#setButton("armed");
+		this.#setTrigger("armed");
 	}
 
-	error():void {
+	error(message?:string):void {
+		if(message !== undefined){this.status = message;}
+
 		this.setActive(false);
-		this.#setButton("error");
-		setTimeout(() => {this.#setButton();}, 2000);
+		this.#setTrigger("error");
+		setTimeout(() => {this.#setTrigger();}, 2000);
 	}
 }

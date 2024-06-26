@@ -15,7 +15,7 @@
 		<div class="panel-container">
 			<div id="setup" class="panel">
 				<h2 class="module-name">SETUP</h2>
-				<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Standby</span></h3>
+				<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Idle</span></h3>
 
 				<input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
 				<div class="setup-button-container">
@@ -46,14 +46,14 @@
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">PROFILE CONFIGURATION</h2>
-				<input id="profilename" placeholder="New Profile Name">
-				<button id="profileadd" class="off width" onclick="storage.add();">ADD NEW PROFILE</button>
+				<input id="profile-name" placeholder="New Profile Name">
+				<button id="profile-add" class="off width" onclick="storage.add();">ADD NEW PROFILE</button>
 				<br><br>
 
-				<button id="profilesave" class="off width" onclick="storage.save();">SAVE</button>
-				<select id="profileselect"></select>
-				<button id="profileload" class="off width" onclick="storage.load();">LOAD</button>
-				<button id="profileremove" class="off width" onclick="storage.remove();">DELETE</button>
+				<button id="profile-save" class="off width" onclick="storage.save();">SAVE</button>
+				<select id="profile-select"></select>
+				<button id="profile-load" class="off width" onclick="storage.load();">LOAD</button>
+				<button id="profile-remove" class="off width" onclick="storage.remove();">DELETE</button>
 
 				<div class="checkbox-row">
 					<input id="loadempty" type="checkbox" checked>
@@ -126,6 +126,8 @@
 						<h3>Engage VNAV</h3>
 					</div>
 				</div>
+				<br>
+				<h3 id="autotakeoff-status"></h3>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">FLIGHT DIRECTOR</h2>
@@ -144,6 +146,9 @@
 					</select>
 				</div>
 				<button id="levelchange" class="width">LEVEL CHANGE</button>
+				<br>
+
+				<h3 id="flyto-status"></h3>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">PATTERN WORK</h2>
@@ -197,6 +202,9 @@
 
 				<button id="autoland" class="width">APPROACH</button>
 			   	<button id="goaround" class="width">GO AROUND</button>
+				<br>
+
+				<h3 id="autoland-status"></h3>
 			</div>
 			<div class="panel" hidden>
 				<h2 class="module-name">VNAV</h2>

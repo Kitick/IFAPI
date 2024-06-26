@@ -337,11 +337,11 @@ const takeoffconfig = new Autofunction("takeoffconfig", -1,
 });
 
 const autotakeoff = new Autofunction("autotakeoff", 500,
-	["onground", "n1", "airspeed"],
+	["onrunway", "n1", "airspeed"],
 	["rotate", "climbspd", "climbthrottle", "takeoffspool", "takeofflnav", "takeoffvnav"],
 	[takeoffconfig, rejecttakeoff], (states, inputs) => {
 
-	const [onground, n1, airspeed] =
+	const [onrunway, n1, airspeed] =
 	states as [boolean, number|null, number];
 
 	const [rotate, climbspd, climbthrottle, takeoffspool, takeofflnav, takeoffvnav] =
@@ -352,11 +352,12 @@ const autotakeoff = new Autofunction("autotakeoff", 500,
 	let stage = autotakeoff.stage;
 
 	if(stage === 0){
-		if(!onground){
-			autotakeoff.error();
-			console.log("Not on a runway");
+		if(!onrunway){
+			autotakeoff.error("Not on a Runway");
 			return;
 		}
+
+		autotakeoff.status = "Inital Setup";
 
 		takeoffconfig.setActive(true);
 		levelchange.setActive(false);
@@ -387,15 +388,24 @@ const autotakeoff = new Autofunction("autotakeoff", 500,
 			write("throttle", throttle);
 			stage++;
 		}
+		else{
+			autotakeoff.status = "Spolling Engines";
+		}
 	}
 	else if(stage === 2){
+		autotakeoff.status = "Takeoff Roll";
+
 		if(airspeed >= rotate){
 			levelchange.setActive(true);
 			stage++;
 		}
 	}
 	else if(stage === 3){
+		autotakeoff.status = "Rotate";
+
 		if(climbspd - airspeed < 10){
+			autotakeoff.status = "Climbout";
+
 			if(takeofflnav){write("navon", true);}
 			if(takeoffvnav){vnavSystem.setActive(true);}
 
@@ -404,6 +414,7 @@ const autotakeoff = new Autofunction("autotakeoff", 500,
 		}
 	}
 	else{
+		autotakeoff.status = "Takeoff Complete";
 		autotakeoff.setActive(false);
 	}
 
@@ -429,6 +440,7 @@ const flyto = new Autofunction("flyto", 1000,
 	const distance = calcLLdistance({lat:latitude, long:longitude}, {lat:flytolat, long:flytolong});
 
 	if(distance < 1){
+		flyto.status = "Arrived";
 		flyto.setActive(false);
 		return;
 	}
@@ -481,6 +493,10 @@ const flyto = new Autofunction("flyto", 1000,
 	const windY = wind * Math.sin(windMath);
 
 	const correction = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
+
+	flyto.status = `Distance: ${distance.toFixed(1)}nm`;
+	flyto.status += `\nOffset: ${diffrence < 0 ? "L":"R"} ${Math.abs(diffrence).toFixed(1)}°`;
+	flyto.status += `\nCrab Angle: ${(correction - course) < 0 ? "L":"R"} ${Math.abs(correction - course).toFixed(1)}°`;
 
 	write("hdg", correction);
 });
@@ -573,11 +589,11 @@ const goaround = new Autofunction("goaround", -1,
 
 	if(onground){
 		goaround.error();
-		console.log("Cannot goaround on the ground");
+		autoland.status = "Cannot Go-Around on the ground";
 		return;
 	}
 
-	autoland.error();
+	autoland.error("Go-Around");
 
 	domInterface.write("leg", "u");
 	domInterface.write("flcinput", flcinputref);
@@ -635,25 +651,41 @@ const autoland = new Autofunction("autoland", 500,
 		write("vs", -200);
 
 		if(option !== "p"){
+			autoland.status = "Flare";
+
 			write("spdon", false);
 			write("throttle", -100);
 		}
 
 		if(option === "p"){
+			autoland.status = "Flying Low-Pass";
+
 			autoland.setActive(false);
 			setTimeout(() => {goaround.setActive(true);}, 10000);
 		}
 		else if(option === "l" && onrunway){
+			autoland.status = "Landing Complete";
+
 			autoland.setActive(false);
 			flypattern.setActive(false);
 			flyto.setActive(false);
 			write("autopilot", false);
 		}
 		else if(option === "t" && onrunway){
+			autoland.status = "Preparing for Takeoff";
+
 			autoland.setActive(false);
-			setTimeout(() => {autotakeoff.setActive(true);}, 5000);
+			setTimeout(() => {
+				autoland.status = "Touch and Go Complete";
+				autotakeoff.setActive(true);
+			}, 5000);
 		}
-		else if(option === "s" && groundspeed < 1){
+		else if(option === "s" && onrunway){
+			autoland.status = "Stopping for Stop and Go";
+
+			if(groundspeed > 1){return;}
+
+			autoland.status = "Stop and Go Complete";
 			autoland.setActive(false);
 			autotakeoff.setActive(true);
 		}
@@ -679,7 +711,11 @@ const autoland = new Autofunction("autoland", 500,
 	vpaout = Math.round(vpaout * 100) / 100;
 
 	if(touchdownDistance > 3 && (vpaout < vparef - limit || (vpaout < vparef - 0.25 && domInterface.read("flcinput")[0] === 0))){
+		autoland.status = "Level-off for GPS G/S Capture";
 		vpaout = 0;
+	}
+	else{
+		autoland.status = "Following GPS G/S";
 	}
 
 	vpaout = Math.min(vpaout, vparef + limit);
