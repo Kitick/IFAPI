@@ -1,4 +1,4 @@
-class Autofunction {
+class AutoFunction {
 	#triggerDOM:HTMLElement;
 	#statusDOM:HTMLElement|null;
 	#status!:string;
@@ -7,7 +7,7 @@ class Autofunction {
 
 	#states:string[] = [];
 	#inputs:string[] = [];
-	#dependents:Autofunction[] = [];
+	#dependents:AutoFunction[] = [];
 
 	#active:boolean = false;
 	#armed:boolean = false;
@@ -16,7 +16,7 @@ class Autofunction {
 	memory:Map<any, any> = new Map();
 	stage = 0;
 
-	constructor(triggerID:string, public delay:number, states:string[], inputs:string[], dependents:Autofunction[], code:funcCode){
+	constructor(triggerID:string, public delay:number, states:string[], inputs:string[], dependents:AutoFunction[], code:funcCode){
 		const triggerDOM = document.getElementById(triggerID);
 		this.#statusDOM = document.getElementById(triggerID + "-status");
 		this.status = "Idle";
