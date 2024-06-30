@@ -182,13 +182,14 @@ const autospeed = new AutoFunction("autospeed", 1000,
 		const distance = calcLLdistance({lat:latitude, long:longitude}, {lat:latref, long:longref});
 
 		let speed = (distance - 2.5) * 10 + spdref;
-		speed = Math.min(speed, spd);
 		speed = Math.round(speed / 10) * 10;
+
 		speed = Math.max(speed, spdref);
+		speed = Math.min(speed, spd);
 
 		newSpeed = speed;
 	}
-	else if(flypattern.isActive() || altitude <= climbalt){
+	else if(flypattern.isActive() || altitude < climbalt + 250){
 		newSpeed = climbspd;
 	}
 	else if(altitude < 10000 || (altitude < 12000 && verticalspeed <= -500)){
@@ -241,7 +242,7 @@ const markposition = new AutoFunction("markposition", -1,
 
 	domInterface.write("latref", latitude);
 	domInterface.write("longref", longitude);
-	domInterface.write("hdgref", Math.round(heading));
+	domInterface.write("hdgref", Math.round(heading * 10) / 10);
 	domInterface.write("altref", Math.round(altitude));
 });
 
@@ -369,7 +370,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		write("vson", false);
 		write("hdgon", true);
 
-		const initalThrottle = takeoffspool ? -20 : throttle;
+		const initalThrottle = takeoffspool ? -40 : throttle;
 		write("throttle", initalThrottle);
 
 		stage++;
@@ -380,11 +381,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		if(!takeoffspool){
 			stage++;
 		}
-		else if(n1 === null){
-			write("throttle", throttle);
-			stage++;
-		}
-		else if(n1 >= 40){
+		else if(n1 === null || n1 >= 40){
 			write("throttle", throttle);
 			stage++;
 		}
@@ -421,7 +418,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 	autotakeoff.stage = stage;
 });
 
-const flyto = new AutoFunction("flyto", 1000,
+const flyto = new AutoFunction("flyto", 500,
 	["latitude", "longitude", "variation", "groundspeed", "wind", "winddir"],
 	["flytolat", "flytolong", "flytohdg"],
 	[], (states, inputs) => {
@@ -461,7 +458,7 @@ const flyto = new AutoFunction("flyto", 1000,
 
 	const absTrack = Math.abs(xtrack);
 	const intAngle = 45;
-	const intDist = 2;
+	const intDist = 1;
 
 	let correction = 100 * absTrack * (flyto.memory.manual ?? 1);
 	correction = Math.min(correction, 30);
@@ -702,12 +699,12 @@ const autoland = new AutoFunction("autoland", 500,
 	}
 
 	autoland.status = `\n\nDistance: ${distance.toFixed(2)}nm`;
-	autoland.status += `\nVX-Track: ${ubovebelow(xtrack * NMtoFT)}ft`;
+	autoland.status += `\nVX-Track: ${ubovebelow(xtrack * NMtoFT, 0)}ft`;
 	autoland.status += `\n\nVPA: ${currentVPA.toFixed(2)}°`;
 	autoland.status += `\nOffset: ${ubovebelow(diffrence, 2)}°`;
 
-	vpaout = Math.min(vpaout, vparef + 2);
 	vpaout = Math.max(vpaout, 0);
+	vpaout = Math.min(vpaout, vparef + 2);
 
 	domInterface.write("flcinput", vpaout);
 
