@@ -455,31 +455,25 @@ const flyto = new AutoFunction("flyto", 1000,
     if(diffrence > 180){diffrence -= 360;}
     else if(diffrence < -180){diffrence += 360;}
 
+	const xtrack = distance * Math.sin(diffrence * toRad);
+
     // Course Correction
-    if(Math.abs(diffrence) < 5){course -= -0.1 * diffrence ** 3 + 8.5 * diffrence;}
-    else{course -= 30 * Math.sign(diffrence);}
+	// Via X-Track
 
+	const absTrack = Math.abs(xtrack);
+	const minDist = 1;
+
+	let correction = (30 / minDist) * absTrack;
+	if(absTrack > 5){correction = 45;}
+	else if(absTrack > minDist){correction = 30;}
+
+	course -= correction * Math.sign(xtrack);
+
+	// Via Angle Diffrence
 	/*
-	const hdgTarget = cyclical(flytohdg);
-	const hdgMath = hdgTarget * toRad; // nautical angle
-
-	const direct = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
-	const xtrackX = (deltaX + deltaY * Math.tan(hdgMath)) * Math.cos(hdgMath) ** 2;
-	const xtrackY = xtrackX * (Math.tan(hdgMath));
-
-	const xtrack = ((xtrackX - deltaX) ** 2 + (xtrackY - deltaY) ** 2) ** 0.5;
-	const direction = Math.sign(direct - hdgTarget);
-
-	let trackCourse = hdgTarget + 45 * direction;
-
-	if(xtrack < 1){
-		trackCourse = hdgTarget + (30/1) * xtrack * direction;
-	}
-	else if(xtrack < 2){
-		trackCourse = hdgTarget + 30 * direction;
-	}
-
-	trackCourse = cyclical(trackCourse);
+	let correction = 30 * Math.sign(diffrence);
+    if(Math.abs(diffrence) < 5){correction = -0.1 * diffrence ** 3 + 8.5 * diffrence;}
+    course -= correction;
 	*/
 
 	// Wind Correction
@@ -492,13 +486,18 @@ const flyto = new AutoFunction("flyto", 1000,
 	const windX = wind * Math.cos(windMath);
 	const windY = wind * Math.sin(windMath);
 
-	const correction = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
+	const windCorrect = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
+
+	function leftright(value:number, round:number = 1):string {
+		return `${value < 0 ? "L" : "R"} ${Math.abs(value).toFixed(round)}`;
+	}
 
 	flyto.status = `Distance: ${distance.toFixed(1)}nm`;
-	flyto.status += `\nOffset: ${diffrence < 0 ? "L":"R"} ${Math.abs(diffrence).toFixed(1)}°`;
-	flyto.status += `\nCrab Angle: ${(correction - course) < 0 ? "L":"R"} ${Math.abs(correction - course).toFixed(1)}°`;
+	flyto.status += `\nX-Track: ${leftright(xtrack, 2)}nm`;
+	flyto.status += `\n\nOffset: ${leftright(diffrence)}°`;
+	flyto.status += `\nCrab Angle: ${leftright(windCorrect - course)}°`;
 
-	write("hdg", correction);
+	write("hdg", windCorrect);
 });
 
 const flypattern = new AutoFunction("flypattern", 1000,
