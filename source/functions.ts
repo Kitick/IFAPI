@@ -497,14 +497,14 @@ const flyto = new AutoFunction("flyto", 1000,
 
 const flypattern = new AutoFunction("flypattern", 1000,
 	["latitude", "longitude", "variation", "groundspeed"],
-	["latref", "longref", "hdgref", "updist", "downwidth", "finallength", "turnconst", "leg", "direction", "approach"],
+	["latref", "longref", "hdgref", "updist", "downwidth", "finallength", "leg", "direction", "approach"],
 	[], (states, inputs) => {
 
 	const [latitude, longitude, variation, groundspeed] =
 	states as [number, number, number, number];
 
-	const [latref, longref, hdgref, updist, downwidth, finallength, turnconst, leg, direction, approach] =
-	inputs as [number, number, number, number, number, number, number, patternLeg, string, boolean];
+	const [latref, longref, hdgref, updist, downwidth, finallength, leg, direction, approach] =
+	inputs as [number, number, number, number, number, number, patternLeg, string, boolean];
 
 	const circuit = (direction === "r") ? 1 : -1;
 	const hdg90 = hdgref + 90 * circuit;
@@ -541,7 +541,7 @@ const flypattern = new AutoFunction("flypattern", 1000,
 	const distance = calcLLdistance({lat:latitude, long:longitude}, currentLeg.location);
 
 	const speed = groundspeed / 60; // kts to nm/m
-	const turnrate = (turnconst / groundspeed) * 60 * toRad; // deg/s to rad/m
+	const turnrate = (350 / groundspeed) * 60 * toRad; // deg/s to rad/m
 
 	let legout = leg;
 	if(distance < speed / turnrate){
@@ -694,8 +694,6 @@ const autoland = new AutoFunction("autoland", 500,
 
 	const correction = 100 * xtrack * (autoland.memory.manual ?? 1);
 
-	const limit = vparef;
-
 	let vpaout = vparef - correction;
 	vpaout = Math.round(vpaout * 100) / 100;
 
@@ -708,8 +706,8 @@ const autoland = new AutoFunction("autoland", 500,
 	autoland.status += `\n\nVPA: ${currentVPA.toFixed(2)}°`;
 	autoland.status += `\nOffset: ${ubovebelow(diffrence, 2)}°`;
 
-	vpaout = Math.min(vpaout, vparef + limit);
-	vpaout = Math.max(vpaout, vparef - limit);
+	vpaout = Math.min(vpaout, vparef + 2);
+	vpaout = Math.max(vpaout, 0);
 
 	domInterface.write("flcinput", vpaout);
 
