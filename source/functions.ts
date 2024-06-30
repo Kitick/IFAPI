@@ -461,9 +461,11 @@ const flyto = new AutoFunction("flyto", 1000,
 
 	const absTrack = Math.abs(xtrack);
 	const intAngle = 45;
-	const intDist = 1.5;
+	const intDist = 2;
 
-	let correction = (intAngle / intDist) * absTrack;
+	let correction = 100 * absTrack * (flyto.memory.manual ?? 1);
+	correction = Math.min(correction, 30);
+
 	if(absTrack > intDist){correction = intAngle;}
 
 	const course = cyclical(hdgTarget - correction * Math.sign(xtrack));
@@ -481,12 +483,13 @@ const flyto = new AutoFunction("flyto", 1000,
 	const windCorrect = cyclical(Math.atan2(courseX - windX, courseY - windY) * toDeg);
 
 	function leftright(value:number, round:number = 1):string {
-		return `${value < 0 ? "L" : "R"} ${Math.abs(value).toFixed(round)}`;
+		return `${value < 0 ? "L":"R"} ${Math.abs(value).toFixed(round)}`;
 	}
 
 	flyto.status = `Distance: ${distance.toFixed(1)}nm`;
 	flyto.status += `\nX-Track: ${leftright(xtrack, 2)}nm`;
-	flyto.status += `\n\nOffset: ${leftright(diffrence)}°`;
+	flyto.status += `\n\nDirect: ${direct.toFixed(0)}°`;
+	flyto.status += `\nOffset: ${leftright(diffrence)}°`;
 	flyto.status += `\nCrab Angle: ${leftright(windCorrect - course)}°`;
 
 	write("hdg", windCorrect);
@@ -624,9 +627,6 @@ const autoland = new AutoFunction("autoland", 500,
 		autoland.stage++;
 	}
 
-	const touchdownZone = calcLLfromHD({lat:latref, long:longref}, hdgref, touchdown / NMtoFT);
-	const touchdownDistance = calcLLdistance({lat:latitude, long:longitude}, touchdownZone);
-
 	if(autoland.stage === 1 && altitudeAGL <= flare){
 		autoland.stage++;
 
@@ -684,32 +684,32 @@ const autoland = new AutoFunction("autoland", 500,
 		return;
 	}
 
-	const currentVPA = Math.asin(altitudeAGL / (touchdownDistance * NMtoFT)) * toDeg;
+	const touchdownZone = calcLLfromHD({lat:latref, long:longref}, hdgref, touchdown / NMtoFT);
+	const distance = calcLLdistance({lat:latitude, long:longitude}, touchdownZone);
 
-	let mod = 3;
-	let limit = 1;
+	const currentVPA = Math.atan2(altitudeAGL / NMtoFT, distance) * toDeg;
+	const diffrence = vparef - currentVPA;
 
-	if(touchdownDistance <= 2){
-		mod = 1;
-		limit = 0.5;
-	}
-	else if(touchdownDistance <= 3){
-		mod = 2;
-		limit = 0.75;
-	}
+	const xtrack = distance * Math.sin(diffrence * toRad);
 
-	let vpaout = currentVPA - mod * (vparef - currentVPA);
+	const correction = 100 * xtrack * (autoland.memory.manual ?? 1);
+
+	const limit = vparef;
+
+	let vpaout = vparef - correction;
 	vpaout = Math.round(vpaout * 100) / 100;
 
-	if(touchdownDistance > 3 && (vpaout < vparef - limit || (vpaout < vparef - 0.25 && domInterface.read("flcinput")[0] === 0))){
-		autoland.status = "Level-off for GPS G/S Capture";
-		vpaout = 0;
-	}
-	else{
-		autoland.status = "Following GPS G/S";
+	function ubovebelow(value:number, round:number = 1):string {
+		return `${value > 0 ? "B":"U"} ${Math.abs(value).toFixed(round)}`;
 	}
 
+	autoland.status = `\n\nDistance: ${distance.toFixed(2)}nm`;
+	autoland.status += `\nVX-Track: ${ubovebelow(xtrack * NMtoFT)}ft`;
+	autoland.status += `\n\nVPA: ${currentVPA.toFixed(2)}°`;
+	autoland.status += `\nOffset: ${ubovebelow(diffrence, 2)}°`;
+
 	vpaout = Math.min(vpaout, vparef + limit);
+	vpaout = Math.max(vpaout, vparef - limit);
 
 	domInterface.write("flcinput", vpaout);
 
