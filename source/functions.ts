@@ -283,21 +283,12 @@ const setrunway = new AutoFunction("setrunway", -1,
 });
 
 const rejecttakeoff = new AutoFunction("reject", -1,
-	["onrunway"],
+	[],
 	[],
 	[], (states, inputs) => {
 
-	const [onrunway] =
-	states as [boolean];
-
-	if(!onrunway){
-		rejecttakeoff.error();
-		console.log("Not on a runway");
-		return;
-	}
-
 	if(autotakeoff.isActive()){
-		autotakeoff.error();
+		autotakeoff.error("Reject Takeoff");
 	}
 
 	write("autopilot", false);
