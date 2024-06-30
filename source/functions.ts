@@ -445,36 +445,28 @@ const flyto = new AutoFunction("flyto", 1000,
 		return;
 	}
 
+	const hdgTarget = cyclical(flytohdg);
+
 	// X and Y are in nm
     const deltaY = 60 * (flytolat - latitude);
     const deltaX = 60 * (flytolong - longitude) * Math.cos((latitude + flytolat) * 0.5 * toRad);
-    let course = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
+    const direct = cyclical(Math.atan2(deltaX, deltaY) * toDeg - variation);
 
-    let diffrence = cyclical(flytohdg) - course;
+    let diffrence = hdgTarget - direct;
 
     if(diffrence > 180){diffrence -= 360;}
     else if(diffrence < -180){diffrence += 360;}
 
 	const xtrack = distance * Math.sin(diffrence * toRad);
 
-    // Course Correction
-	// Via X-Track
-
 	const absTrack = Math.abs(xtrack);
-	const minDist = 1;
+	const intAngle = 45;
+	const intDist = 1.5;
 
-	let correction = (30 / minDist) * absTrack;
-	if(absTrack > 5){correction = 45;}
-	else if(absTrack > minDist){correction = 30;}
+	let correction = (intAngle / intDist) * absTrack;
+	if(absTrack > intDist){correction = intAngle;}
 
-	course -= correction * Math.sign(xtrack);
-
-	// Via Angle Diffrence
-	/*
-	let correction = 30 * Math.sign(diffrence);
-    if(Math.abs(diffrence) < 5){correction = -0.1 * diffrence ** 3 + 8.5 * diffrence;}
-    course -= correction;
-	*/
+	const course = cyclical(hdgTarget - correction * Math.sign(xtrack));
 
 	// Wind Correction
 	const windmag = cyclical(winddir - variation + 180);
