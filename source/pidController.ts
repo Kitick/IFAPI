@@ -98,3 +98,22 @@ class PIDController {
 		this.#interval = null;
 	}
 }
+
+let flcPID = new PID(100, 1, 5, -3000, 5000, undefined, {inverted:true});
+let flcController = new PIDController(flcPID,
+	async () => {return (await readAsync("airspeed"))[0] as number;},
+	(value:number) => {write("vs", value);},
+	200);
+
+let throttlePID = new PID(10, 0.1, 1, -100, 100, 2);
+let n1PID = new PID(5, 0.1, 1, 20, 90);
+
+let n1Controller = new PIDController(throttlePID,
+	async () => {return (await readAsync("n1"))[0] as number;},
+	(value:number) => {write("throttle", value);},
+	50);
+
+let speedController = new PIDController(n1PID,
+	async () => {return (await readAsync("airspeed"))[0] as number;},
+	(value:number) => {n1Controller.target = value;},
+	200);

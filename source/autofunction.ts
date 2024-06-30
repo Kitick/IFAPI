@@ -13,7 +13,7 @@ class AutoFunction {
 	#armed:boolean = false;
 	#code:funcCode;
 
-	memory:Map<any, any> = new Map();
+	memory:any = {};
 	stage = 0;
 
 	constructor(triggerID:string, public delay:number, states:string[], inputs:string[], dependents:AutoFunction[], code:funcCode){
