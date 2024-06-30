@@ -102,10 +102,11 @@ const statLog = document.getElementById("status") as HTMLSpanElement;
 const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;
 
 const storage = new ProfileStorage(document.getElementById("profile-select") as HTMLSelectElement);
-
+/*
 const select = document.getElementById("voices") as HTMLSelectElement;
 const voices = speechSynthesis.getVoices();
 for(let i = 0, length = voices.length; i < length; i++){
 	const newOption = new Option(voices[i].lang, i.toString());
 	select.add(newOption);
 }
+*/

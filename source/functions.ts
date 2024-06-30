@@ -407,7 +407,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 			autotakeoff.status = "Climbout";
 
 			if(takeofflnav){write("navon", true);}
-			if(takeoffvnav){vnavSystem.setActive(true);}
+			//if(takeoffvnav){vnavSystem.setActive(true);}
 
 			write("spdon", true);
 			stage++;
@@ -721,6 +721,7 @@ const autoland = new AutoFunction("autoland", 500,
 	if(autogear.isActive()){autogear.setActive(option !== "p");}
 });
 
+/*
 const updatefpl = new AutoFunction("updatefpl", -1,
 	["fplinfo"],
 	[],
@@ -906,5 +907,5 @@ const callout = new AutoFunction("callout", 250,
 
 	callout.stage = stage;
 });
-
-const autofunctions = [autobrakes, autoflaps, autogear, autoland, autolights, autospeed, autospoilers, autotakeoff, autotrim, callout, flypattern, flyto, goaround, levelchange, markposition, rejecttakeoff, setrunway, takeoffconfig, updatefpl, vnavSystem];
+*/
+const autofunctions = [autobrakes, autoflaps, autogear, autoland, autolights, autospeed, autospoilers, autotakeoff, autotrim, flypattern, flyto, goaround, levelchange, markposition, rejecttakeoff, setrunway, takeoffconfig];
