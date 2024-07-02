@@ -1,14 +1,13 @@
 # Welcome to Flight Sim Copilot!
 
-To get started, download the latest release from the releases folder.
+To get started, download the latest release from
+https://drive.google.com/drive/folders/1t2V1Zfb1sbgXg1FTC_OCI6ee49TOu5UV?usp=sharing
 
 Ensure:
 - You have the Infinite Flight Connect setting checked on in the game settings.
 - Both devices are connected to the same network.
-
 - If using an IP address, ensure it is the private address. (i.e. starting in 192.168)
 - If you are on Mac, you need to run this directly with node. Check those instructions below.
-
 - Using this with VPNs is untested.
 
 USAGE INSTRUCTIONS
