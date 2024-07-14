@@ -110,6 +110,7 @@ Item.addAlias("aircraft/0/systems/autopilot/vs/on", "vson");
 Item.addAlias("aircraft/0/systems/autopilot/spd/on", "spdon");
 Item.addAlias("aircraft/0/systems/autopilot/hdg/on", "hdgon");
 Item.addAlias("aircraft/0/systems/autopilot/nav/on", "navon");
+Item.addAlias("aircraft/0/systems/autopilot/approach/on", "approach");
 
 Item.addAlias("aircraft/0/systems/autopilot/alt/target", "alt", 3.28084);
 Item.addAlias("aircraft/0/systems/autopilot/vs/target", "vs", 3.28084);

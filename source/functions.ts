@@ -155,12 +155,12 @@ const autospoilers = new AutoFunction("spoilers", 1000,
 });
 
 const autospeed = new AutoFunction("autospeed", 1000,
-	["onground", "verticalspeed", "altitudeAGL", "altitude", "latitude", "longitude", "spd"],
+	["onground", "verticalspeed", "altitudeAGL", "altitude", "latitude", "longitude", "spd", "approach"],
 	["latref", "longref", "climbspd", "climbalt", "spdref", "cruisespd"],
 	[], (states, inputs) => {
 
-	const [onground, verticalspeed, altitudeAGL, altitude, latitude, longitude, spd] =
-	states as [boolean, number, number, number, number, number, number];
+	const [onground, verticalspeed, altitudeAGL, altitude, latitude, longitude, spd, approach] =
+	states as [boolean, number, number, number, number, number, number, boolean];
 
 	const [latref, longref, climbspd, climbalt, spdref, cruisespd] =
 	inputs as [number, number, number, number, number, number];
@@ -178,7 +178,7 @@ const autospeed = new AutoFunction("autospeed", 1000,
 
 	let newSpeed = spd;
 
-	if(autoland.isActive()){
+	if(autoland.isActive() || approach){
 		const distance = calcLLdistance({lat:latitude, long:longitude}, {lat:latref, long:longref});
 
 		let speed = (distance - 2.5) * 10 + spdref;
@@ -485,13 +485,13 @@ const flyto = new AutoFunction("flyto", 500,
 
 const flypattern = new AutoFunction("flypattern", 1000,
 	["latitude", "longitude", "variation", "groundspeed"],
-	["latref", "longref", "hdgref", "updist", "downwidth", "finallength", "leg", "direction", "approach"],
+	["latref", "longref", "hdgref", "updist", "downwidth", "finallength", "leg", "direction", "approachfinal"],
 	[], (states, inputs) => {
 
 	const [latitude, longitude, variation, groundspeed] =
 	states as [number, number, number, number];
 
-	const [latref, longref, hdgref, updist, downwidth, finallength, leg, direction, approach] =
+	const [latref, longref, hdgref, updist, downwidth, finallength, leg, direction, approachfinal] =
 	inputs as [number, number, number, number, number, number, patternLeg, string, boolean];
 
 	const circuit = (direction === "r") ? 1 : -1;
@@ -542,7 +542,7 @@ const flypattern = new AutoFunction("flypattern", 1000,
 		}
 	}
 
-	if(legout === "f" && approach){
+	if(legout === "f" && approachfinal){
 		autoland.setActive(true);
 	}
 
@@ -616,6 +616,7 @@ const autoland = new AutoFunction("autoland", 500,
 	}
 
 	if(autoland.stage === 1 && altitudeAGL <= flare){
+		autoland.status = "Flare";
 		autoland.stage++;
 
 		levelchange.setActive(false);
@@ -627,13 +628,13 @@ const autoland = new AutoFunction("autoland", 500,
 	}
 
 	if(autoland.stage === 2){
-		write("vs", -200);
-
 		if(option !== "p"){
-			autoland.status = "Flare";
-
+			write("vs", -200);
 			write("spdon", false);
 			write("throttle", -100);
+		}
+		else{
+			write("vs", 0);
 		}
 
 		if(option === "p"){
@@ -689,7 +690,7 @@ const autoland = new AutoFunction("autoland", 500,
 		return `${value > 0 ? "B":"U"} ${Math.abs(value).toFixed(round)}`;
 	}
 
-	autoland.status = `\n\nDistance: ${distance.toFixed(2)}nm`;
+	autoland.status = `Distance: ${distance.toFixed(2)}nm`;
 	autoland.status += `\nVX-Track: ${ubovebelow(xtrack * NMtoFT, 0)}ft`;
 	autoland.status += `\n\nVPA: ${currentVPA.toFixed(2)}°`;
 	autoland.status += `\nOffset: ${ubovebelow(diffrence, 2)}°`;
@@ -894,4 +895,3 @@ const callout = new AutoFunction("callout", 250,
 	callout.stage = stage;
 });
 */
-const autofunctions = [autobrakes, autoflaps, autogear, autoland, autolights, autospeed, autospoilers, autotakeoff, autotrim, flypattern, flyto, goaround, levelchange, markposition, rejecttakeoff, setrunway, takeoffconfig];
