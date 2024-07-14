@@ -53,7 +53,9 @@ class PID {
 		return error;
 	}
 
-	update(current:number, target:number):number {
+	update(current:number, target:number, dt:number = 1000):number {
+		dt /= 1000;
+
 		const error = this.#calcError(current, target);
 		const deltaE = error - this.#lastError;
 		const deltaE2 = this.#lastError - this.#last2Error;
@@ -63,7 +65,9 @@ class PID {
 		const deltaD = this.kd * (deltaE - deltaE2);
 
 		let deltaOut = deltaP + deltaI + deltaD;
-		deltaOut = this.#clampValue(deltaOut, -this.maxDelta, this.maxDelta);
+
+		const maxDelta = this.maxDelta * dt;
+		deltaOut = this.#clampValue(deltaOut, -maxDelta, maxDelta);
 
 		if(this.#inverted){deltaOut *= -1;}
 
