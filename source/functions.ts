@@ -204,7 +204,7 @@ const autospeed = new AutoFunction("autospeed", 1000,
 	if(newSpeed !== spd){write("spd", newSpeed);}
 });
 
-const levelchange = new AutoFunction("levelchange", 1000,
+const altchange = new AutoFunction("altchange", 1000,
 	["airspeed", "altitude", "alt"],
 	["flcinput", "flcmode"],
 	[], (states, inputs) => {
@@ -220,7 +220,7 @@ const levelchange = new AutoFunction("levelchange", 1000,
 	const diffrence = alt - altitude;
 
 	if(Math.abs(diffrence) < 100){
-		levelchange.setActive(false);
+		altchange.setActive(false);
 		return;
 	}
 
@@ -352,7 +352,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		autotakeoff.status = "Inital Setup";
 
 		takeoffconfig.setActive(true);
-		levelchange.setActive(false);
+		altchange.setActive(false);
 
 		write("spd", climbspd);
 
@@ -384,7 +384,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		autotakeoff.status = "Takeoff Roll";
 
 		if(airspeed >= rotate){
-			levelchange.setActive(true);
+			altchange.setActive(true);
 			stage++;
 		}
 	}
@@ -593,7 +593,7 @@ const goaround = new AutoFunction("goaround", -1,
 	write("alton", true);
 	write("hdgon", true);
 
-	levelchange.setActive(true);
+	altchange.setActive(true);
 });
 
 const autoland = new AutoFunction("autoland", 500,
@@ -619,7 +619,7 @@ const autoland = new AutoFunction("autoland", 500,
 		autoland.status = "Flare";
 		autoland.stage++;
 
-		levelchange.setActive(false);
+		altchange.setActive(false);
 
 		domInterface.write("flcinput", flcinputref);
 		domInterface.write("flcmode", flcmoderef);
@@ -702,7 +702,7 @@ const autoland = new AutoFunction("autoland", 500,
 
 	write("alt", -1000);
 
-	levelchange.setActive(true);
+	altchange.setActive(true);
 	flypattern.setActive(true);
 
 	if(autogear.isActive()){autogear.setActive(option !== "p");}
