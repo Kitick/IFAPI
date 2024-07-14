@@ -55,18 +55,20 @@ class PID {
 
 	update(current:number, target:number):number {
 		const error = this.#calcError(current, target);
+		const deltaE = error - this.#lastError;
+		const deltaE2 = this.#lastError - this.#last2Error;
 
-		const deltaP = this.kp * (error - this.#lastError);
+		const deltaP = this.kp * deltaE;
 		const deltaI = this.ki * error;
-		const deltaD = this.kd * (error + -2 * this.#lastError + this.#last2Error);
+		const deltaD = this.kd * (deltaE - deltaE2);
 
 		let deltaOut = deltaP + deltaI + deltaD;
 		deltaOut = this.#clampValue(deltaOut, -this.maxDelta, this.maxDelta);
 
 		if(this.#inverted){deltaOut *= -1;}
 
-		this.#lastError = error;
 		this.#last2Error = this.#lastError;
+		this.#lastError = error;
 
 		this.#output += deltaOut;
 		this.#output = this.#clampValue(this.#output, this.minValue, this.maxValue);
@@ -74,46 +76,3 @@ class PID {
 		return this.#output;
 	}
 }
-
-class PIDController {
-	#pid:PID;
-	#interval:NodeJS.Timeout|null = null;
-
-	constructor(pid:PID, public input:() => Promise<number>, public output:(value:number) => void, public target:number = 0){
-		this.#pid = pid;
-	}
-
-	async start(delay:number):Promise<void> {
-		this.stop();
-
-		const inputValue = await this.input();
-		const outputValue = this.#pid.update(inputValue, this.target);
-		this.output(outputValue);
-
-		this.#interval = setTimeout(() => {this.start(delay);}, delay);
-	}
-
-	stop():void {
-		clearInterval(this.#interval ?? undefined);
-		this.#interval = null;
-	}
-}
-
-let flcPID = new PID(100, 1, 5, -3000, 5000, undefined, {inverted:true});
-let flcController = new PIDController(flcPID,
-	async () => {return (await readAsync("airspeed"))[0] as number;},
-	(value:number) => {write("vs", value);},
-	200);
-
-let throttlePID = new PID(10, 0.1, 1, -100, 100, 2);
-let n1PID = new PID(5, 0.1, 1, 20, 90);
-
-let n1Controller = new PIDController(throttlePID,
-	async () => {return (await readAsync("n1"))[0] as number;},
-	(value:number) => {write("throttle", value);},
-	50);
-
-let speedController = new PIDController(n1PID,
-	async () => {return (await readAsync("airspeed"))[0] as number;},
-	(value:number) => {n1Controller.target = value;},
-	200);
