@@ -49,8 +49,6 @@ class AutoFunction {
 				tooltip.innerText = "Tooltip";
 			});
 		});
-
-		domInterface.add(...inputs);
 	}
 
 	set status(message:string){

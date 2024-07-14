@@ -1,7 +1,9 @@
 class DOMInterface {
 	#data:Map<string, {dom:inputHTML, value:dataValue}> = new Map();
 
-	constructor(){}
+	constructor(className:string){
+		this.init(className);
+	}
 
 	#parse(dom:inputHTML):void {
 		const refrence = this.#data.get(dom.id);
@@ -23,6 +25,15 @@ class DOMInterface {
 	#error(dom:inputHTML):void {
 		dom.classList.add("error");
 		setTimeout(() => {dom.classList.remove("error");}, 2000);
+	}
+
+	init(className:string):void {
+		const elements = document.getElementsByClassName(className);
+
+		for(let i = 0, length = elements.length; i < length; i++){
+			const element = elements[i];
+			this.add(element.id);
+		}
 	}
 
 	add(...ids:string[]):void {
