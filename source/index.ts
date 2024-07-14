@@ -3,11 +3,34 @@ const server = (window as any).electron;
 server.on("ready", ([address]:[string]) => {
 	(document.getElementById("address") as HTMLInputElement).value = address;
 	setHidden(false);
+	setInterval(() => {ping();}, 1000);
 });
 
 server.on("log", ([response]:[string]) => {
 	log(response);
 });
+
+server.on("ping", ([devicePing]:[number]) => {
+	const totalPing = performance.now() - pingDelay;
+	const serverPing = totalPing - devicePing;
+
+	pingDOM.innerText = `Total Ping: ${totalPing.toFixed(1)} ms`;
+	pingDOM.innerText += `\n\nServer Ping: ${serverPing.toFixed(1)} ms`;
+	pingDOM.innerText += `\nDevice Ping: ${devicePing.toFixed(1)} ms`;
+});
+
+function log(message:string){
+	statLog.innerText = message;
+	console.log(message);
+}
+
+let pingDOM = document.getElementById("ping") as HTMLElement;
+let pingDelay:number = 0;
+
+function ping(){
+	pingDelay = performance.now();
+	server.send("ping");
+}
 
 const readbacks:Map<string, (value:stateValue) => void> = new Map();
 
@@ -70,8 +93,8 @@ function bridge():void {
 }
 
 function closeBridge():void {
-	reset();
 	server.send("break");
+	location.reload();
 }
 
 function setHidden(hidden:boolean):void {
@@ -81,22 +104,7 @@ function setHidden(hidden:boolean):void {
 	}
 }
 
-function reset():void {
-	setHidden(true);
-
-	autofunctions.forEach(autofunc => {
-		autofunc.setActive(false);
-	});
-
-	storage.load(ProfileStorage.defaultName);
-}
-
-function log(message:string){
-	statLog.innerText = message;
-	console.log(message);
-}
-
-const domInterface = new DOMInterface();
+const domInterface = new DOMInterface("data");
 
 const statLog = document.getElementById("status") as HTMLSpanElement;
 const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;

@@ -51,3 +51,11 @@ ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
 	item.value = value;
 	client.writeState(command);
 });
+
+ipcMain.on("ping", (event:any) => {
+	const start = performance.now();
+	client.readState("autopilot", () => {
+		const delay = performance.now() - start;
+		display.send("ping", delay);
+	});
+});
