@@ -17,16 +17,12 @@ const spdControl = new AutoFunction("spd", 50,
 	}
 
 	if(spdControl.memory.spdPID === undefined){
-		spdControl.memory.spdPID = new PID(30, 1, 0, -100, 100);
+		spdControl.memory.spdPID = new PID(30, 1, 0, -100, 100, 20 * 2);
 
 		// if using N1
-		spdControl.memory.n1PID = new PID(5, 0.1, 0, 15);
-		spdControl.memory.throttlePID = new PID(10, 1, 0, -100, 100);
+		spdControl.memory.n1PID = new PID(10, 0.1, 0, 15);
+		spdControl.memory.throttlePID = new PID(10, 1, 0, -100, 100, 20 * 2);
 	}
-
-	const throttleSpeed = 20 * (spdControl.delay / 1000) * 2; // %/s
-	spdControl.memory.spdPID.maxDelta = throttleSpeed;
-	spdControl.memory.throttlePID.maxDelta = throttleSpeed;
 
 	let throttle:number;
 
@@ -36,15 +32,94 @@ const spdControl = new AutoFunction("spd", 50,
 
 		n1PID.maxValue = n1sel;
 
-		const targetN1 = n1PID.update(airspeed, spdsel);
-		throttle = throttlePID.update(n1, targetN1);
+		const targetN1 = n1PID.update(airspeed, spdsel, spdControl.delay);
+		throttle = throttlePID.update(n1, targetN1, spdControl.delay);
 	}
 	else{
 		const spdPID = spdControl.memory.spdPID as PID;
-		throttle = spdPID.update(airspeed, spdsel);
+		throttle = spdPID.update(airspeed, spdsel, spdControl.delay);
 	}
 
 	write("spdon", false);
 	write("spd", spdsel);
 	write("throttle", throttle);
 });
+
+/*
+const n1Control = new AutoFunction("n1", 50,
+	["n1"],
+	["apmaster", "n1sel"],
+	[], (states, inputs) => {
+
+	const [n1] =
+	states as [number];
+
+	const [apmaster, n1sel] =
+	inputs as [boolean, number];
+
+	if(!apmaster){
+		n1Control.error();
+		return;
+	}
+
+	if(n1Control.memory.throttlePID === undefined){
+		n1Control.memory.throttlePID = new PID(10, 1, 0, -100, 100, 20 * 2);
+	}
+
+	const throttlePID = n1Control.memory.throttlePID as PID;
+	const throttle = throttlePID.update(n1, n1sel, n1Control.delay);
+
+	write("spdon", false);
+	write("throttle", throttle);
+});
+*/
+const flcControl = new AutoFunction("flc", 100,
+	["airspeed", "altitude", "alton", "vson"],
+	["apmaster", "spdsel", "flcalt"],
+	[], (states, inputs) => {
+
+	const [airspeed, altitude, alton, vson] =
+	states as [number, number, boolean, boolean];
+
+	const [apmaster, spdsel, flcalt] =
+	inputs as [boolean, number, number];
+
+	if(!apmaster){
+		flcControl.error();
+		return;
+	}
+
+	if(flcControl.memory.vsPID === undefined){
+		flcControl.memory.vsPID = new PID(100, 5, 0, undefined, undefined, 200, {inverted:true});
+	}
+
+	const vsPID = flcControl.memory.vsPID as PID;
+
+	if(flcalt > altitude){
+		vsPID.minValue = 0;
+		vsPID.maxValue = 5000;
+	}
+	else{
+		vsPID.minValue = -3000;
+		vsPID.maxValue = 0;
+	}
+
+	const vs = vsPID.update(airspeed, spdsel, flcControl.delay);
+
+	write("spdon", false);
+	if(alton){write("alton", false);}
+	if(!vson){write("vson", true);}
+
+	write("spd", spdsel);
+	write("alt", flcalt);
+	write("vs", vs);
+});
+
+/*
+speed via throttle | spd
+speed via vs | flc
+alt via vs | vs
+
+speed via n1 | n1
+n1 via throttle | n1
+*/
