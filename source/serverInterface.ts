@@ -4,26 +4,29 @@ class ServerInterface {
 	pingDOM:HTMLElement|null = null;
 
 	#requestIndex:number = 0;
-	#requests:((data:any) => void)[] = [];
+	#requests:Map<number, (data:any) => void> = new Map();
 
 	async #request(channel:string, ...data:any[]):Promise<any> {
 		let index = this.#requestIndex;
-		while(this.#requests[index] !== undefined){
+		while(this.#requests.has(index)){
 			index++;
 		}
 
 		this.#requestIndex = index + 1;
 
 		return new Promise(resolve => {
-			this.#requests[index] = resolve;
+			this.#requests.set(index, resolve);
 			this.#server.send(channel, index, ...data);
 		});
 	}
 
 	#response(index:number, data:any):void {
-		const resolve = this.#requests[index];
-		delete this.#requests[index];
+		const resolve = this.#requests.get(index);
+		if(resolve === undefined){return;}
+
+		this.#requests.delete(index);
 		this.#requestIndex = 0;
+
 		resolve(data);
 	}
 
