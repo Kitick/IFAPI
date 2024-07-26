@@ -60,7 +60,7 @@ class ProfileStorage {
 	save(name:string = this.#selectDOM.value):void {
 		if(name === ""){this.add(); return;}
 
-		const data = domInterface.readAll();
+		const data = dom.readAll();
 
 		let profile:any = {};
 		data.forEach((value, key) => {
@@ -90,7 +90,7 @@ class ProfileStorage {
 			}
 			else if(!loadEmpty){continue;}
 
-			domInterface.write(id, value);
+			dom.write(id, value);
 		}
 
 		this.#flash("profile-load", "active");

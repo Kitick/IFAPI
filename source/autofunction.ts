@@ -106,8 +106,8 @@ class AutoFunction {
 		const wasArmed = this.#armed;
 		this.#armed = false;
 
-		const states = await readAsync(...this.#states);
-		const inputs = domInterface.read(...this.#inputs);
+		const states = await server.readStates(...this.#states);
+		const inputs = dom.readInputs(...this.#inputs);
 
 		this.#code(states, inputs);
 
@@ -129,7 +129,7 @@ class AutoFunction {
 	}
 
 	validateInputs(doError = false):boolean {
-		let valid = domInterface.validate(doError, ...this.#inputs);
+		let valid = dom.validate(doError, ...this.#inputs);
 
 		this.#dependents.forEach(dependent => {
 			valid = dependent.validateInputs() && valid;

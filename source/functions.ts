@@ -7,7 +7,7 @@ const autotrim = new AutoFunction("trim", 1000,
 	states as [boolean, number, number];
 
 	if(onground){
-		if(trim !== 0){write("trim", 0);}
+		if(trim !== 0){server.writeState("trim", 0);}
 		return;
 	}
 
@@ -25,7 +25,7 @@ const autotrim = new AutoFunction("trim", 1000,
 		let newTrim = trim + mod * Math.sign(pitch);
 		newTrim = Math.round(newTrim / mod) * mod;
 
-		write("trim", newTrim);
+		server.writeState("trim", newTrim);
 	}
 });
 
@@ -37,19 +37,19 @@ const autolights = new AutoFunction("lights", 2000,
 	const [altitudeAGL, onground, onrunway, gear] =
 	states as [number, boolean, boolean, boolean];
 
-	write("master", true);
-	write("beaconlights", true);
-	write("navlights", true);
+	server.writeState("master", true);
+	server.writeState("beaconlights", true);
+	server.writeState("navlights", true);
 
 	if(onground){
-		write("strobelights", onrunway);
-		write("landinglights", onrunway);
+		server.writeState("strobelights", onrunway);
+		server.writeState("landinglights", onrunway);
 	}
 	else{
-		write("strobelights", true);
+		server.writeState("strobelights", true);
 
-		if(altitudeAGL < 1000 && gear){write("landinglights", true);}
-		else{write("landinglights", false);}
+		if(altitudeAGL < 1000 && gear){server.writeState("landinglights", true);}
+		else{server.writeState("landinglights", false);}
 	}
 });
 
@@ -71,7 +71,7 @@ const autogear = new AutoFunction("gear", 1000,
 	}
 
 	// readcommand to use the animation
-	if(newState !== gear){readAsync("commands/LandingGear");}
+	if(newState !== gear){server.readState("commands/LandingGear");}
 });
 
 const autobrakes = new AutoFunction("autobrakes", 1000,
@@ -92,7 +92,7 @@ const autobrakes = new AutoFunction("autobrakes", 1000,
 		newBrakes = 0;
 	}
 
-	if(newBrakes !== autobrakes){write("autobrakes", newBrakes);}
+	if(newBrakes !== autobrakes){server.writeState("autobrakes", newBrakes);}
 });
 
 const autoflaps = new AutoFunction("flaps", 1000,
@@ -131,7 +131,7 @@ const autoflaps = new AutoFunction("flaps", 1000,
 		newFlaps = flaps;
 	}
 
-	if(newFlaps !== flaps){write("flaps", newFlaps);}
+	if(newFlaps !== flaps){server.writeState("flaps", newFlaps);}
 });
 
 const autospoilers = new AutoFunction("spoilers", 1000,
@@ -151,7 +151,7 @@ const autospoilers = new AutoFunction("spoilers", 1000,
 		newSpoilers = 1;
 	}
 
-	if(newSpoilers !== spoilers){write("spoilers", newSpoilers);}
+	if(newSpoilers !== spoilers){server.writeState("spoilers", newSpoilers);}
 });
 
 const autospeed = new AutoFunction("autospeed", 1000,
@@ -166,7 +166,7 @@ const autospeed = new AutoFunction("autospeed", 1000,
 	inputs as [number, number, number, number, number, number];
 
 	// elevation is optional, so its not in the inputs
-	const elevation = domInterface.read("altref")[0] as number|null;
+	const elevation = dom.readInput("altref") as number|null;
 
 	if(onground){
 		autospeed.arm();
@@ -201,7 +201,7 @@ const autospeed = new AutoFunction("autospeed", 1000,
 
 	newSpeed = Math.min(newSpeed, cruisespd);
 
-	if(newSpeed !== spd){write("spd", newSpeed);}
+	if(newSpeed !== spd){server.writeState("spd", newSpeed);}
 });
 
 const altchange = new AutoFunction("altchange", 1000,
@@ -229,7 +229,7 @@ const altchange = new AutoFunction("altchange", 1000,
 
 	output *= Math.sign(diffrence);
 
-	write("vs", output);
+	server.writeState("vs", output);
 });
 
 const markposition = new AutoFunction("markposition", -1,
@@ -240,10 +240,10 @@ const markposition = new AutoFunction("markposition", -1,
 	const [latitude, longitude, altitude, heading] =
 	states as [number, number, number, number];
 
-	domInterface.write("latref", latitude);
-	domInterface.write("longref", longitude);
-	domInterface.write("hdgref", Math.round(heading * 10) / 10);
-	domInterface.write("altref", Math.round(altitude));
+	dom.write("latref", latitude);
+	dom.write("longref", longitude);
+	dom.write("hdgref", Math.round(heading * 10) / 10);
+	dom.write("altref", Math.round(altitude));
 });
 
 const setrunway = new AutoFunction("setrunway", -1,
@@ -276,10 +276,10 @@ const setrunway = new AutoFunction("setrunway", -1,
 	const longref = parseFloat(runwayCoords[1]);
 	const hdgref = parseInt(runway);
 
-	domInterface.write("latref", latref);
-	domInterface.write("longref", longref);
-	domInterface.write("hdgref", hdgref);
-	domInterface.write("altref", null);
+	dom.write("latref", latref);
+	dom.write("longref", longref);
+	dom.write("hdgref", hdgref);
+	dom.write("altref", null);
 });
 
 const rejecttakeoff = new AutoFunction("reject", -1,
@@ -291,8 +291,8 @@ const rejecttakeoff = new AutoFunction("reject", -1,
 		autotakeoff.error("Reject Takeoff");
 	}
 
-	write("autopilot", false);
-	write("throttle", -100);
+	server.writeState("autopilot", false);
+	server.writeState("throttle", -100);
 });
 
 const takeoffconfig = new AutoFunction("takeoffconfig", -1,
@@ -318,14 +318,14 @@ const takeoffconfig = new AutoFunction("takeoffconfig", -1,
 		alt += agl;
 	}
 
-	domInterface.write("flcinput", flcinputref);
-	domInterface.write("flcmode", flcmoderef);
+	dom.write("flcinput", flcinputref);
+	dom.write("flcmode", flcmoderef);
 
-	write("alt", alt);
-	write("hdg", heading);
-	write("vs", 0);
+	server.writeState("alt", alt);
+	server.writeState("hdg", heading);
+	server.writeState("vs", 0);
 
-	write("parkingbrake", false);
+	server.writeState("parkingbrake", false);
 });
 
 const autotakeoff = new AutoFunction("autotakeoff", 500,
@@ -354,26 +354,26 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		takeoffconfig.setActive(true);
 		altchange.setActive(false);
 
-		write("spd", climbspd);
+		server.writeState("spd", climbspd);
 
-		write("autopilot", true);
-		write("alton", true);
-		write("vson", false);
-		write("hdgon", true);
+		server.writeState("autopilot", true);
+		server.writeState("alton", true);
+		server.writeState("vson", false);
+		server.writeState("hdgon", true);
 
 		const initalThrottle = takeoffspool ? -40 : throttle;
-		write("throttle", initalThrottle);
+		server.writeState("throttle", initalThrottle);
 
 		stage++;
 	}
 	else if(stage === 1){
-		write("vson", true);
+		server.writeState("vson", true);
 
 		if(!takeoffspool){
 			stage++;
 		}
 		else if(n1 === null || n1 >= 40){
-			write("throttle", throttle);
+			server.writeState("throttle", throttle);
 			stage++;
 		}
 		else{
@@ -394,10 +394,10 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		if(climbspd - airspeed < 10){
 			autotakeoff.status = "Climbout";
 
-			if(takeofflnav){write("navon", true);}
+			if(takeofflnav){server.writeState("navon", true);}
 			//if(takeoffvnav){vnavSystem.setActive(true);}
 
-			write("spdon", true);
+			server.writeState("spdon", true);
 			stage++;
 		}
 	}
@@ -480,7 +480,7 @@ const flyto = new AutoFunction("flyto", 500,
 	flyto.status += `\nOffset: ${leftright(diffrence)}°`;
 	flyto.status += `\nCrab Angle: ${leftright(windCorrect - course)}°`;
 
-	write("hdg", windCorrect);
+	server.writeState("hdg", windCorrect);
 });
 
 const flypattern = new AutoFunction("flypattern", 1000,
@@ -550,10 +550,10 @@ const flypattern = new AutoFunction("flypattern", 1000,
 	const longout = currentLeg.location.long;
 	const hdgout = ((currentLeg.hdg % 360) + 360) % 360;
 
-	domInterface.write("leg", legout);
-	domInterface.write("flytolat", latout);
-	domInterface.write("flytolong", longout);
-	domInterface.write("flytohdg", hdgout);
+	dom.write("leg", legout);
+	dom.write("flytolat", latout);
+	dom.write("flytolong", longout);
+	dom.write("flytohdg", hdgout);
 
 	flyto.setActive(true);
 });
@@ -577,9 +577,9 @@ const goaround = new AutoFunction("goaround", -1,
 
 	autoland.error("Go-Around");
 
-	domInterface.write("leg", "u");
-	domInterface.write("flcinput", flcinputref);
-	domInterface.write("flcmode", flcmoderef);
+	dom.write("leg", "u");
+	dom.write("flcinput", flcinputref);
+	dom.write("flcmode", flcmoderef);
 
 	let alt = climbalt;
 	if(climbtype === "agl"){
@@ -587,11 +587,11 @@ const goaround = new AutoFunction("goaround", -1,
 		alt += agl;
 	}
 
-	write("spd", climbspd);
-	write("alt", alt);
-	write("spdon", true);
-	write("alton", true);
-	write("hdgon", true);
+	server.writeState("spd", climbspd);
+	server.writeState("alt", alt);
+	server.writeState("spdon", true);
+	server.writeState("alton", true);
+	server.writeState("hdgon", true);
 
 	altchange.setActive(true);
 });
@@ -610,8 +610,8 @@ const autoland = new AutoFunction("autoland", 500,
 	const altitudeAGL = altitude - altref;
 
 	if(autoland.stage === 0){
-		domInterface.write("flcmode", "v");
-		domInterface.write("leg", "f");
+		dom.write("flcmode", "v");
+		dom.write("leg", "f");
 		autoland.stage++;
 	}
 
@@ -621,20 +621,20 @@ const autoland = new AutoFunction("autoland", 500,
 
 		altchange.setActive(false);
 
-		domInterface.write("flcinput", flcinputref);
-		domInterface.write("flcmode", flcmoderef);
+		dom.write("flcinput", flcinputref);
+		dom.write("flcmode", flcmoderef);
 
 		return;
 	}
 
 	if(autoland.stage === 2){
 		if(option !== "p"){
-			write("vs", -200);
-			write("spdon", false);
-			write("throttle", -100);
+			server.writeState("vs", -200);
+			server.writeState("spdon", false);
+			server.writeState("throttle", -100);
 		}
 		else{
-			write("vs", 0);
+			server.writeState("vs", 0);
 		}
 
 		if(option === "p"){
@@ -649,7 +649,7 @@ const autoland = new AutoFunction("autoland", 500,
 			autoland.setActive(false);
 			flypattern.setActive(false);
 			flyto.setActive(false);
-			write("autopilot", false);
+			server.writeState("autopilot", false);
 		}
 		else if(option === "t" && onrunway){
 			autoland.status = "Preparing for Takeoff";
@@ -698,9 +698,9 @@ const autoland = new AutoFunction("autoland", 500,
 	vpaout = Math.max(vpaout, 0);
 	vpaout = Math.min(vpaout, vparef + 2);
 
-	domInterface.write("flcinput", vpaout);
+	dom.write("flcinput", vpaout);
 
-	write("alt", -1000);
+	server.writeState("alt", -1000);
 
 	altchange.setActive(true);
 	flypattern.setActive(true);

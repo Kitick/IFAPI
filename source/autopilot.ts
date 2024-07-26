@@ -1,15 +1,15 @@
 const spdControl = new AutoFunction("spd", 50,
-	["airspeed", "n1"],
+	["airspeed", "altitude", "n1"],
 	["apmaster", "spdsel"],
 	[], (states, inputs) => {
 
-	const [airspeed, n1] =
-	states as [number, number|null];
+	const [airspeed, altitude, n1] =
+	states as [number, number, number|null];
 
-	const [apmaster, spdsel] =
-	inputs as [boolean, number];
+	const [apmaster, spdsel, flcalt] =
+	inputs as [boolean, number, number];
 
-	const n1sel = domInterface.read("n1sel")[0] as number|null;
+	const n1sel = dom.readInput("n1sel") as number|null;
 
 	if(!apmaster){
 		spdControl.error();
@@ -24,6 +24,12 @@ const spdControl = new AutoFunction("spd", 50,
 		spdControl.memory.throttlePID = new PID(10, 1, 0, -100, 100, 20 * 2);
 	}
 
+	let target = spdsel;
+	const altdiff = flcalt - altitude;
+	if(flcControl.isActive() && Math.abs(altdiff) > 100){
+		target += 10 * Math.sign(altdiff);
+	}
+
 	let throttle:number;
 
 	if(n1sel !== null && n1 !== null){
@@ -32,17 +38,17 @@ const spdControl = new AutoFunction("spd", 50,
 
 		n1PID.maxValue = n1sel;
 
-		const targetN1 = n1PID.update(airspeed, spdsel, spdControl.delay);
+		const targetN1 = n1PID.update(airspeed, target, spdControl.delay);
 		throttle = throttlePID.update(n1, targetN1, spdControl.delay);
 	}
 	else{
 		const spdPID = spdControl.memory.spdPID as PID;
-		throttle = spdPID.update(airspeed, spdsel, spdControl.delay);
+		throttle = spdPID.update(airspeed, target, spdControl.delay);
 	}
 
-	write("spdon", false);
-	write("spd", spdsel);
-	write("throttle", throttle);
+	server.writeState("spdon", false);
+	server.writeState("spd", target);
+	server.writeState("throttle", throttle);
 });
 
 /*
@@ -106,13 +112,13 @@ const flcControl = new AutoFunction("flc", 100,
 
 	const vs = vsPID.update(airspeed, spdsel, flcControl.delay);
 
-	write("spdon", false);
-	if(alton){write("alton", false);}
-	if(!vson){write("vson", true);}
+	server.writeState("spdon", false);
+	if(alton){server.writeState("alton", false);}
+	if(!vson){server.writeState("vson", true);}
 
-	write("spd", spdsel);
-	write("alt", flcalt);
-	write("vs", vs);
+	server.writeState("spd", spdsel);
+	server.writeState("alt", flcalt);
+	server.writeState("vs", vs);
 });
 
 /*

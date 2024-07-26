@@ -1,8 +1,8 @@
 class DOMInterface {
 	#data:Map<string, {dom:inputHTML, value:dataValue}> = new Map();
 
-	constructor(className:string){
-		this.init(className);
+	constructor(elements:HTMLCollection){
+		this.init(elements);
 	}
 
 	#parse(dom:inputHTML):void {
@@ -27,8 +27,8 @@ class DOMInterface {
 		setTimeout(() => {dom.classList.remove("error");}, 2000);
 	}
 
-	init(className:string):void {
-		const elements = document.getElementsByClassName(className);
+	init(elements:HTMLCollection):void {
+		this.#data.clear();
 
 		for(let i = 0, length = elements.length; i < length; i++){
 			const element = elements[i];
@@ -54,17 +54,19 @@ class DOMInterface {
 		});
 	}
 
-	read(...ids:string[]):dataValue[] {
-		let returnArray:dataValue[] = [];
+	readInput(id:string):dataValue {
+		const value = this.#data.get(id)?.value ?? null;
+		return value;
+	}
+
+	readInputs(...ids:string[]):dataValue[] {
+		let values:dataValue[] = [];
 
 		ids.forEach(id => {
-			const value = this.#data.get(id)?.value;
-			if(value === undefined){return;}
-
-			returnArray.push(value);
+			values.push(this.readInput(id));
 		});
 
-		return returnArray;
+		return values;
 	}
 
 	readAll():dataMap {
