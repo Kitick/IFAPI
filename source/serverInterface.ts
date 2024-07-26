@@ -87,12 +87,12 @@ class ServerInterface {
 		return totalPing;
 	}
 
-	async readState(command:string):Promise<stateValue> {
+	async readState(command:string):Promise<dataValue> {
 		return this.#request("read", command);
 	}
 
-	async readStates(...commands:string[]):Promise<stateValue[]> {
-		let promises:Promise<stateValue>[] = [];
+	async readStates(...commands:string[]):Promise<dataValue[]> {
+		let promises:Promise<dataValue>[] = [];
 
 		commands.forEach(command => {
 			promises.push(this.readState(command));

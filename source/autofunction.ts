@@ -97,17 +97,16 @@ class AutoFunction {
 	}
 
 	async #run():Promise<void> {
-		const valid = this.validateInputs(true);
-		if(!valid){
-			this.error("Missing Inputs");
+		if(!this.validateInputs(true)){
+			this.error("Some Required Inputs are Missing");
 			return;
 		}
 
 		const wasArmed = this.#armed;
 		this.#armed = false;
 
-		const states = await server.readStates(...this.#states);
-		const inputs = dom.readInputs(...this.#inputs);
+		const states = await server.readStates(...this.#states) as stateValue[];
+		const inputs = dom.readInputs(...this.#inputs) as stateValue[];
 
 		this.#code(states, inputs);
 

@@ -11,7 +11,7 @@ type altType = "msl" | "agl";
 type climbType = "f" | "g" | "v";
 type patternLeg = "u" | "c" | "d" | "b" | "f";
 
-type funcCode = (states:stateValue[], inputs:dataValue[]) => void;
+type funcCode = (states:stateValue[], inputs:stateValue[]) => void;
 
 type fplStruct = {
 	bearing:number,
@@ -66,3 +66,31 @@ type vnavWaypoint = {
 	altitudeRestrictionDistance:number,
 	restrictionLocation:latlong
 };
+
+/*
+let states:stateTypes = {
+	"airspeed":null,
+	"altitude":null,
+	"spdon":null,
+	"alton":null
+};
+
+function readStateType<K extends keyof stateTypes>(key: K):stateTypes[K]|null {
+	return states[key];
+}
+
+let value = readStateType("groundspeed");
+
+value;
+*/
+
+/*
+type stateTypes = {
+	[key:string]:stateValue
+
+	"airspeed":number,
+	"altitude":number,
+	"spdon":boolean,
+	"alton":boolean,
+};
+*/
