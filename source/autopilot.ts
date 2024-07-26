@@ -1,13 +1,13 @@
 const spdControl = new AutoFunction("spd", 50,
 	["airspeed", "altitude", "n1"],
 	["apmaster", "spdsel"],
-	[], (states, inputs) => {
+	[], async (states, inputs) => {
 
 	const [airspeed, altitude, n1] =
 	states as [number, number, number|null];
 
-	const [apmaster, spdsel, flcalt] =
-	inputs as [boolean, number, number];
+	const [apmaster, spdsel] =
+	inputs as [boolean, number];
 
 	const n1sel = dom.readInput("n1sel") as number|null;
 
@@ -24,8 +24,17 @@ const spdControl = new AutoFunction("spd", 50,
 		spdControl.memory.throttlePID = new PID(10, 1, 0, -100, 100, 20 * 2);
 	}
 
+	if(spdControl.stage === 0){
+		spdControl.stage++;
+		const throttle = await server.readState("throttle") as number;
+
+		spdControl.memory.spdPID.output = throttle;
+		spdControl.memory.throttlePID.output = throttle;
+		spdControl.memory.n1PID.output = n1;
+	}
+
 	let target = spdsel;
-	const altdiff = flcalt - altitude;
+	const altdiff = (dom.readInput("flcalt") as number ?? 0) - altitude;
 	if(flcControl.isActive() && Math.abs(altdiff) > 100){
 		target += 10 * Math.sign(altdiff);
 	}
@@ -47,7 +56,7 @@ const spdControl = new AutoFunction("spd", 50,
 	}
 
 	server.writeState("spdon", false);
-	server.writeState("spd", target);
+	server.writeState("spd", spdsel);
 	server.writeState("throttle", throttle);
 });
 
@@ -82,7 +91,7 @@ const n1Control = new AutoFunction("n1", 50,
 const flcControl = new AutoFunction("flc", 100,
 	["airspeed", "altitude", "alton", "vson"],
 	["apmaster", "spdsel", "flcalt"],
-	[], (states, inputs) => {
+	[], async (states, inputs) => {
 
 	const [airspeed, altitude, alton, vson] =
 	states as [number, number, boolean, boolean];
@@ -97,6 +106,13 @@ const flcControl = new AutoFunction("flc", 100,
 
 	if(flcControl.memory.vsPID === undefined){
 		flcControl.memory.vsPID = new PID(100, 5, 0, undefined, undefined, 200, {inverted:true});
+	}
+
+	if(flcControl.stage === 0){
+		flcControl.stage++;
+
+		const vs = await server.readState("vs") as number;
+		flcControl.memory.vsPID.output = vs;
 	}
 
 	const vsPID = flcControl.memory.vsPID as PID;

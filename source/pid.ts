@@ -1,17 +1,17 @@
 class PID {
-	#lastError = 0;
-	#last2Error = 0;
-	#output = 0;
+	lastError = 0;
+	last2Error = 0;
+	output = 0;
 
-	#cyclical:boolean;
-	#inverted:boolean;
+	cyclical:boolean;
+	inverted:boolean;
 
 	constructor(public kp:number = 0, public ki:number = 0, public kd:number = 0, public minValue:number = -Infinity, public maxValue:number = Infinity, public maxDelta:number = Infinity, public options:{
 		cyclical?:boolean,
 		inverted?:boolean
 	} = {}){
-		this.#cyclical = options.cyclical ?? false;
-		this.#inverted = options.inverted ?? false;
+		this.cyclical = options.cyclical ?? false;
+		this.inverted = options.inverted ?? false;
 	}
 
 	#modulus(value:number):number {
@@ -42,7 +42,7 @@ class PID {
 	#calcError(current:number, target:number):number {
 		let error = target - current;
 
-		if(this.#cyclical){
+		if(this.cyclical){
 			current = this.#modulus(current);
 			target = this.#modulus(target);
 
@@ -57,8 +57,8 @@ class PID {
 		dt /= 1000;
 
 		const error = this.#calcError(current, target);
-		const deltaE = error - this.#lastError;
-		const deltaE2 = this.#lastError - this.#last2Error;
+		const deltaE = error - this.lastError;
+		const deltaE2 = this.lastError - this.last2Error;
 
 		const deltaP = this.kp * deltaE;
 		const deltaI = this.ki * error;
@@ -69,14 +69,14 @@ class PID {
 		const maxDelta = this.maxDelta * dt;
 		deltaOut = this.#clampValue(deltaOut, -maxDelta, maxDelta);
 
-		if(this.#inverted){deltaOut *= -1;}
+		if(this.inverted){deltaOut *= -1;}
 
-		this.#last2Error = this.#lastError;
-		this.#lastError = error;
+		this.last2Error = this.lastError;
+		this.lastError = error;
 
-		this.#output += deltaOut;
-		this.#output = this.#clampValue(this.#output, this.minValue, this.maxValue);
+		this.output += deltaOut;
+		this.output = this.#clampValue(this.output, this.minValue, this.maxValue);
 
-		return this.#output;
+		return this.output;
 	}
 }
