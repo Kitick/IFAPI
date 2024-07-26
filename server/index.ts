@@ -45,7 +45,13 @@ ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
 
 ipcMain.on("ping", async (event:any, [index]:[number]) => {
 	const start = performance.now();
+
+	const logTransmits = client.logTransmits;
+	client.logTransmits = client.logPings;
+
 	await client.readState("autopilot");
+	client.logTransmits = logTransmits;
+
 	const delay = performance.now() - start;
 
 	display.send("response", index, delay);

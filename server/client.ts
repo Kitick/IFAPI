@@ -8,13 +8,16 @@ class Client {
 	#scannerTimeout:NodeJS.Timeout|null = null;
 	#active:boolean = false;
 	#dataBuffer:Buffer = Buffer.alloc(0);
-	#manifest:Map<string, Item> = new Map();
+	#manifest:Map<string|number, Item> = new Map();
+
+	logTransmits:boolean = true;
+	logPings:boolean = false;
 
 	constructor(){
 		this.#initManifest();
 
 		this.#device.on("data", (buffer:Buffer) => {
-			console.log(this.#address + " Rx\t\t\t", buffer);
+			//console.log(`${this.#address} | Rx`, buffer);
 
 			this.#dataBuffer = Buffer.concat([this.#dataBuffer, buffer]);
 
@@ -132,7 +135,7 @@ class Client {
 	}
 
 	#initManifest():void {
-		this.#manifest = new Map();
+		this.#manifest.clear();
 		this.addItem(new Item(-1, 4, "manifest"));
 	}
 
@@ -173,17 +176,14 @@ class Client {
 	}
 
 	#processData(id:number, data:Buffer):void {
-		if(id === -1){
-			const item = this.getItem("manifest") as Item;
-			this.#buildManifest(data);
-			item.callback();
-			return;
-		}
-
-		const item = this.getItem(id.toString());
+		const item = this.#manifest.get(id);
 		if(item === undefined){return;}
 
-		item.buffer = data;
+		if(id === -1){this.#buildManifest(data);}
+		else{item.buffer = data;}
+
+		this.#transmitLog(item, data, "Rx");
+
 		item.callback();
 	}
 
@@ -196,10 +196,11 @@ class Client {
 		return buffer;
 	}
 
-	#serverLog(name:string, item:Item, buffer:Buffer, writing = false){
-		const equals = writing ? " =":"";
-		const value = writing ? item.value:"";
-		console.log(this.#address, "Tx", name, "(" + item.id.toString() + ")" + equals, value, buffer);
+	#transmitLog(item:Item, buffer:Buffer, type:string, showValue:boolean = true){
+		if(!this.logTransmits){return;}
+		const equals = " = " + item.value?.toString();
+		const assign = showValue ? equals : "";
+		console.log(`${this.#address} | ${type}  ${item.id.toString()}  ${item.alias ?? item.name}${assign}`, buffer);
 	}
 
 	log(message:string):void {
@@ -208,9 +209,9 @@ class Client {
 	}
 
 	async readState(itemID:string):Promise<dataValue> {
-		return new Promise((resolve, reject) => {
-			const item = this.getItem(itemID);
-			if(item === undefined){reject(); return;}
+		return new Promise(resolve => {
+			const item = this.#manifest.get(itemID);
+			if(item === undefined){resolve(null); return;}
 
 			if(item.type === -1){resolve(null);}
 			else{
@@ -221,35 +222,29 @@ class Client {
 			const buffer = this.#initalBuffer(item.id, 0);
 
 			this.#device.write(buffer);
-			this.#serverLog(itemID, item, buffer);
+			this.#transmitLog(item, buffer, "Qx", false);
 		});
 	}
 
 	writeState(itemID:string, value:stateValue):void {
-		const item = this.getItem(itemID);
-		if(item === undefined){return;}
+		const item = this.#manifest.get(itemID);
+		if(item === undefined){this.log(`Item '${itemID}' is invalid`); return;}
 
 		item.value = value;
-		let buffer = this.#initalBuffer(item.id, 1);
 
+		let buffer = this.#initalBuffer(item.id, 1);
 		buffer = Buffer.concat([buffer, item.buffer]);
 
 		this.#device.write(buffer);
-		this.#serverLog(itemID, item, buffer, true);
+		this.#transmitLog(item, buffer, "Tx");
 	}
 
 	addItem(item:Item):void {
-		this.#manifest.set(item.id.toString(), item);
+		this.#manifest.set(item.id, item);
 		this.#manifest.set(item.name, item);
 
 		if(item.alias !== null){
 			this.#manifest.set(item.alias, item);
 		}
-	}
-
-	getItem(itemID:string):Item|undefined {
-		const item = this.#manifest.get(itemID);
-		if(item === undefined){this.log(this.#address + " Invalid Item " + itemID);}
-		return item;
 	}
 }
