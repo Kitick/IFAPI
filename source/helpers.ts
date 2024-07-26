@@ -1,5 +1,8 @@
 const NMtoFT = 6076.12;
 
+const toDeg = 180 / Math.PI;
+const toRad = Math.PI / 180;
+
 function dms(deg:number, min = 0, sec = 0):number {
 	return Math.sign(deg) * (Math.abs(deg) + (min / 60) + (sec / 3600));
 }
@@ -24,21 +27,21 @@ function calcLLdistance(location:latlong, location2:latlong):number {
 	return distance;
 }
 
-function controlThrottle(throttle:number, spd:number, spdDifference:number):void {
-	write("spdon", false);
-
-	if(throttle > 0){write("throttle", -80);}
-	else{write("throttle", -100);}
-
-	write("spd", spd);
-	write("spoilers", 1);
-
-	if(spdDifference){
-		write("spdon", true);
-		write("spoilers", 2);
+function dependencyCheck(id:string):void {
+	if(id === "autoland" && autoland.isActive() && dom.readInput("approach")){
+		dom.write("approach", false);
+	}
+	else if(id === "flypattern" && flypattern.isActive()){
+		autoland.setActive(false);
+		flyto.setActive(false);
+	}
+	else if(id === "flyto" && flyto.isActive()){
+		flypattern.setActive(false);
+		autoland.setActive(false);
 	}
 }
 
+/*
 function showfpl(id:string, waypoint:string, div:HTMLDivElement):void {
 	const input = document.createElement("input");
 	const br = document.createElement("br");
@@ -62,6 +65,7 @@ function nextRestriction(item:fplItemStruct, waypoint:vnavWaypoint, itemIndex:nu
 
 	return waypoint;
 }
+*/
 
 function speak(text:string):void {
 	text = text.toString()
@@ -82,35 +86,3 @@ function speak(text:string):void {
 }
 
 speechSynthesis.getVoices();
-
-const toDeg = 180 / Math.PI;
-const toRad = Math.PI / 180;
-
-function setAll(className:string):void {
-	const state = className === "off";
-
-	autogear.setActive(state);
-	autospoilers.setActive(state);
-	autotrim.setActive(state);
-	autoflaps.setActive(state);
-	autolights.setActive(state);
-	autobrakes.setActive(state);
-	autospeed.setActive(state);
-
-	const all = document.getElementById("all") as HTMLButtonElement;
-	all.className = state ? "active" : "off";
-}
-
-function dependencyCheck(id:string):void {
-	if(id === "autoland" && autoland.isActive() && domInterface.read("approach")){
-		domInterface.write("approach", false);
-	}
-	else if(id === "flypattern" && flypattern.isActive()){
-		autoland.setActive(false);
-		flyto.setActive(false);
-	}
-	else if(id === "flyto" && flyto.isActive()){
-		flypattern.setActive(false);
-		autoland.setActive(false);
-	}
-}

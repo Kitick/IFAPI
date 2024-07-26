@@ -15,11 +15,26 @@ function setHidden(hidden:boolean):void {
 	}
 }
 
+function setAll(className:string):void {
+	const state = className === "off";
+
+	autogear.setActive(state);
+	autospoilers.setActive(state);
+	autotrim.setActive(state);
+	autoflaps.setActive(state);
+	autolights.setActive(state);
+	autobrakes.setActive(state);
+	autospeed.setActive(state);
+
+	const all = document.getElementById("all") as HTMLButtonElement;
+	all.className = state ? "active" : "off";
+}
+
 const statLog = document.getElementById("status") as HTMLSpanElement;
 const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;
 
 const server = new ServerInterface(document.getElementById("ping") as HTMLSpanElement);
-const domInterface = new DOMInterface(document.getElementsByClassName("data") as HTMLCollection);
+const dom = new DOMInterface(document.getElementsByClassName("data") as HTMLCollection);
 const storage = new ProfileStorage(document.getElementById("profile-select") as HTMLSelectElement);
 
 /*
