@@ -22,25 +22,21 @@ app.whenReady().then(() => {
 	console.log("\nLoading Complete, Server Ready\n");
 });
 
-ipcMain.on("bridge", (event:any, [address]:[string]) => {
+ipcMain.on("start", (event:any, [address]:[string]) => {
 	client.log("Connection Requested");
 	client.connect(address);
 });
 
-ipcMain.on("break", (event:any) => {
+ipcMain.on("stop", (event:any) => {
 	client.log("Closure Requested");
 	client.close();
 });
 
-ipcMain.on("read", (event:any, [command, callbackID]:[string, any]) => {
+ipcMain.on("read", (event:any, [index, command]:[number, string]) => {
 	const item = client.getItem(command);
-	if(item === undefined){
-		display.send("readback", callbackID, undefined);
-		return;
-	}
 
 	client.readState(command, () => {
-		display.send("readback", callbackID, item.value);
+		display.send("response", index, item?.value ?? undefined);
 	});
 });
 
@@ -52,10 +48,10 @@ ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
 	client.writeState(command);
 });
 
-ipcMain.on("ping", (event:any) => {
+ipcMain.on("ping", (event:any, [index]:[number]) => {
 	const start = performance.now();
 	client.readState("autopilot", () => {
 		const delay = performance.now() - start;
-		display.send("ping", delay);
+		display.send("response", index, delay);
 	});
 });

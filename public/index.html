@@ -17,10 +17,10 @@
 				<h2 class="module-name">SETUP</h2>
 				<h3 class="status-heading">Welcome to Infinite Flight Copilot!<br><br>Status: <span id="status">Idle</span></h3>
 
-				<input id="address" onkeypress="if(event.key === 'Enter'){bridge();}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
+				<input id="address" onkeypress="if(event.key === 'Enter'){server.start(this.value);}" type="text" autocomplete="off" value="" class="ip-address-input" placeholder="IP Address">
 				<div class="setup-button-container">
-					<button id="connectButton" onclick="bridge();">Connect</button>
-					<button id="closeButton" onclick="closeBridge();">Close</button>
+					<button id="connectButton" onclick="server.start();">Connect</button>
+					<button id="closeButton" onclick="server.stop();">Close</button>
 				</div>
 
 				<h3>Ensure you are loaded in a flight before connecting<br><br>Restart the connection if you start a new flight</h3>
