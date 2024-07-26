@@ -2,7 +2,6 @@ const Net = require("net");
 const UDP = require("dgram");
 
 class Client {
-	#display:any;
 	#address:string = "";
 	#device:any = new Net.Socket();
 	#scanner:any|null = null;
@@ -11,9 +10,7 @@ class Client {
 	#dataBuffer:Buffer = Buffer.alloc(0);
 	#manifest:Map<string, Item> = new Map();
 
-	constructor(display:any){
-		this.#display = display;
-
+	constructor(){
 		this.#initManifest();
 
 		this.#device.on("data", (buffer:Buffer) => {
@@ -24,21 +21,10 @@ class Client {
 			this.#validate();
 		});
 
-		this.#device.on("error", (error:any) => {
-			if(error.code === "ECONNREFUSED"){
-				this.log(this.#address + " TCP Connection Refused");
-			}
-		});
-
 		this.log("TCP Socket Created");
 	}
 
 	get #scanning(){return this.#scanner !== null;}
-
-	#initManifest():void {
-		this.#manifest = new Map();
-		this.addItem(new Item(-1, 4, "manifest"));
-	}
 
 	#closeScanner(){
 		if(!this.#scanning){return;}
@@ -50,30 +36,104 @@ class Client {
 		this.#scanner = null;
 	}
 
-	#findAddress():void {
+	async #findAddress():Promise<string> {
 		if(this.#scanning){
 			this.log("Already searching for packets");
-			return;
+			return Promise.reject();
 		}
 
 		this.log("Searching for UDP packets...");
 
 		this.#scanner = UDP.createSocket("udp4");
 
-		this.#scanner.on("message", (data:any, info:any) => {
-			let address = info.address;
-			this.log(address + " UDP Packet Found");
+		const search = new Promise<string>((resolve, reject) => {
+			this.#scanner.on("message", (data:any, info:any) => {
+				let address = info.address;
+				this.log(address + " UDP Packet Found");
 
-			this.#closeScanner();
-			this.connect(address);
+				this.#closeScanner();
+				resolve(address);
+			});
+
+			this.#scanner.on("error", (error:any) => {
+				this.log("UDP Error: " + error.code);
+				this.#closeScanner();
+				reject();
+			});
+
+			this.#scanner.bind(15000);
 		});
 
-		this.#scanner.bind(15000);
+		const timeout = new Promise<string>((_, reject) => {
+			this.#scannerTimeout = setTimeout(() => {
+				this.log("UDP search timed out\n\nTry using an IP address");
+				this.#closeScanner();
+				reject();
+			}, 10000);
+		});
 
-		this.#scannerTimeout = setTimeout(() => {
-			this.#closeScanner();
-			this.log("UDP search timed out\n\nTry using an IP address");
-		}, 10000);
+		return Promise.race([search, timeout]);
+	}
+
+	async connect(address = ""):Promise<string> {
+		if(this.#active){
+			this.log(this.#address + " TCP is already active");
+			return this.#address;
+		}
+
+		this.#address = address;
+
+		if(this.#address === ""){
+			this.#address = await this.#findAddress();
+		}
+
+		this.log(this.#address + " Attempting TCP Connection");
+
+		this.#device.on("error", (error:any) => {
+			if(error.code === "ECONNREFUSED"){
+				this.log(this.#address + " TCP Connection Refused");
+			}
+			else{
+				this.log(this.#address + " TCP Error: " + error.code);
+			}
+
+			return Promise.reject();
+		});
+
+		return new Promise(resolve => {
+			this.#device.connect({host:this.#address, port:10112}, async () => {
+				this.#active = true;
+				this.log(this.#address + " TCP Established, Requesting Manifest");
+
+				await this.readState("manifest");
+
+				resolve(this.#address);
+			});
+		});
+	}
+
+	async close():Promise<void> {
+		if(this.#scanning){this.#closeScanner();}
+
+		if(!this.#active){
+			this.log("TCP Closed");
+			return;
+		}
+
+		this.#active = false;
+
+		return new Promise(resolve => {
+			this.#device.end(() => {
+				this.log(this.#address + " TCP Closed");
+				this.#address = "";
+				resolve();
+			});
+		});
+	}
+
+	#initManifest():void {
+		this.#manifest = new Map();
+		this.addItem(new Item(-1, 4, "manifest"));
 	}
 
 	#validate():void {
@@ -93,26 +153,30 @@ class Client {
 		if(this.#dataBuffer.length > 0){this.#validate();}
 	}
 
+	#buildManifest(data:Buffer):void {
+		this.#initManifest();
+
+		const stringData = data.toString().split("\n");
+
+		stringData.forEach(raw => {
+			const itemRaw = raw.split(",");
+
+			const id = parseInt(itemRaw[0]);
+			const type = parseInt(itemRaw[1]) as bufferType;
+			const name = itemRaw[2];
+
+			const item = new Item(id, type, name);
+			this.addItem(item);
+		});
+
+		this.log(this.#address + "\nManifest Built, API Ready");
+	}
+
 	#processData(id:number, data:Buffer):void {
 		if(id === -1){
-			this.#initManifest();
-
-			const stringData = data.toString().split("\n");
-
-			stringData.forEach(raw => {
-				const itemRaw = raw.split(",");
-
-				const id = parseInt(itemRaw[0]);
-				const type = parseInt(itemRaw[1]) as bufferType;
-				const name = itemRaw[2];
-
-				const item = new Item(id, type, name);
-				this.addItem(item);
-			});
-
-			this.log(this.#address + "\nManifest Built, API Ready");
-			this.#display.send("ready", this.#address);
-
+			const item = this.getItem("manifest") as Item;
+			this.#buildManifest(data);
+			item.callback();
 			return;
 		}
 
@@ -139,69 +203,33 @@ class Client {
 	}
 
 	log(message:string):void {
-		this.#display.send("log", message);
+		display.send("log", message);
 		console.log(message);
 	}
 
-	connect(address = ""):void {
-		if(this.#active){
-			this.log(this.#address + " TCP is already active");
-			this.#display.send("ready", this.#address);
-			return;
-		}
+	async readState(itemID:string):Promise<dataValue> {
+		return new Promise((resolve, reject) => {
+			const item = this.getItem(itemID);
+			if(item === undefined){reject(); return;}
 
-		this.#address = address;
+			if(item.type === -1){resolve(null);}
+			else{
+				const length = item.addCallback(resolve);
+				if(length > 1){return;}
+			}
 
-		if(this.#address === ""){
-			this.#findAddress();
-			return;
-		}
+			const buffer = this.#initalBuffer(item.id, 0);
 
-		this.log(this.#address + " Attempting TCP Connection");
-
-		this.#device.connect({host:this.#address, port:10112}, () => {
-			this.#active = true;
-			this.log(this.#address + " TCP Established, Requesting Manifest");
-			this.readState("manifest");
+			this.#device.write(buffer);
+			this.#serverLog(itemID, item, buffer);
 		});
 	}
 
-	close():void {
-		if(this.#scanning){this.#closeScanner();}
-
-		if(!this.#active){
-			this.log("TCP Closed");
-			return;
-		}
-
-		this.#active = false;
-
-		this.#device.end(() => {
-			this.log(this.#address + " TCP Closed");
-			this.#address = "";
-		});
-	}
-
-	readState(itemID:string, callback = () => {}):void {
-		const item = this.getItem(itemID);
-		if(item === undefined){callback(); return;}
-
-		if(item.type === -1){callback();}
-		else{
-			const length = item.addCallback(callback);
-			if(length > 1){return;}
-		}
-
-		const buffer = this.#initalBuffer(item.id, 0);
-
-		this.#device.write(buffer);
-		this.#serverLog(itemID, item, buffer);
-	}
-
-	writeState(itemID:string):void {
+	writeState(itemID:string, value:stateValue):void {
 		const item = this.getItem(itemID);
 		if(item === undefined){return;}
 
+		item.value = value;
 		let buffer = this.#initalBuffer(item.id, 1);
 
 		buffer = Buffer.concat([buffer, item.buffer]);

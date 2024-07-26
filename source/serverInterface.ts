@@ -37,18 +37,12 @@ class ServerInterface {
 			this.#response(index, data);
 		});
 
-		this.#server.on("ready", ([address]:[string]) => {
-			(document.getElementById("address") as HTMLInputElement).value = address;
-			setHidden(false);
-			setInterval(() => {this.ping();}, 1000);
-		});
-
 		this.#server.on("log", ([response]:[string]) => {
 			log(response);
 		});
 	}
 
-	start(address:string):void {
+	async start(address:string):Promise<string> {
 		address = address ?? (document.getElementById("address") as HTMLInputElement).value;
 		const parts = address.split(".");
 
@@ -64,11 +58,17 @@ class ServerInterface {
 			}
 		}
 
-		this.#server.send("start", address);
+		const ip = await this.#request("start", address) as string;
+
+		(document.getElementById("address") as HTMLInputElement).value = ip;
+		setHidden(false);
+		setInterval(() => {this.ping();}, 1000);
+
+		return ip;
 	}
 
-	stop():void {
-		this.#server.send("stop");
+	async stop():Promise<void> {
+		await this.#request("stop");
 		location.reload();
 	}
 

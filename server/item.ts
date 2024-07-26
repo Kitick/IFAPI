@@ -8,7 +8,7 @@ class Item {
 	#alias:string|null = null;
 	#conversion:number|null = null;
 	#value:dataValue = null;
-	#callbacks:(() => void)[] = [];
+	#callbacks:((value:dataValue) => void)[] = [];
 
 	constructor(public id:number, public type:bufferType, public name:string){
 		const alias = Item.#aliasMap.get(this.name);
@@ -73,14 +73,14 @@ class Item {
 		this.value = value;
 	}
 
-	addCallback(callback = () => {}):number {
+	addCallback(callback:(value:dataValue) => void):number {
 		this.#callbacks.push(callback);
 		const length = this.#callbacks.length;
 		return length;
 	}
 
 	callback():void {
-		this.#callbacks.forEach(clientCallback => {clientCallback();});
+		this.#callbacks.forEach(callback => {callback(this.#value);});
 		this.#callbacks = [];
 	}
 }

@@ -17,41 +17,36 @@ app.whenReady().then(() => {
 	browser.loadFile("public/index.html");
 
 	display = browser.webContents;
-	client = new Client(display);
+	client = new Client();
 
 	console.log("\nLoading Complete, Server Ready\n");
 });
 
-ipcMain.on("start", (event:any, [address]:[string]) => {
+ipcMain.on("start", async (event:any, [index, address]:[number, string]) => {
 	client.log("Connection Requested");
-	client.connect(address);
+	const ip = await client.connect(address);
+	display.send("response", index, ip);
 });
 
-ipcMain.on("stop", (event:any) => {
+ipcMain.on("stop", async (event:any, [index]:[number]) => {
 	client.log("Closure Requested");
-	client.close();
+	await client.close();
+	display.send("response", index);
 });
 
-ipcMain.on("read", (event:any, [index, command]:[number, string]) => {
-	const item = client.getItem(command);
-
-	client.readState(command, () => {
-		display.send("response", index, item?.value ?? undefined);
-	});
+ipcMain.on("read", async (event:any, [index, command]:[number, string]) => {
+	const value = await client.readState(command);
+	display.send("response", index, value);
 });
 
 ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
-	const item = client.getItem(command);
-	if(item === undefined){return;}
-
-	item.value = value;
-	client.writeState(command);
+	client.writeState(command, value);
 });
 
-ipcMain.on("ping", (event:any, [index]:[number]) => {
+ipcMain.on("ping", async (event:any, [index]:[number]) => {
 	const start = performance.now();
-	client.readState("autopilot", () => {
-		const delay = performance.now() - start;
-		display.send("response", index, delay);
-	});
+	await client.readState("autopilot");
+	const delay = performance.now() - start;
+
+	display.send("response", index, delay);
 });
