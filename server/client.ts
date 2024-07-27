@@ -140,20 +140,22 @@ class Client {
 	}
 
 	#validate():void {
-		if(this.#dataBuffer.length < 9){return;}
+		const minPacketLength = 9;
+		if(this.#dataBuffer.length < minPacketLength){return;}
 
 		const dataLength = this.#dataBuffer.readInt32LE(4) + 8; // 4 byte id + 4 byte length
 
 		if(this.#dataBuffer.length < dataLength){return;}
 
-		const id = this.#dataBuffer.readInt32LE(0);
-		const data = this.#dataBuffer.subarray(8, dataLength);
+		const packet = this.#dataBuffer.subarray(0, dataLength);
+		const id = packet.readInt32LE(0);
+		const data = packet.subarray(8, dataLength);
 
 		this.#dataBuffer = this.#dataBuffer.subarray(dataLength);
 
-		this.#processData(id, data);
+		this.#processData(id, data, packet);
 
-		if(this.#dataBuffer.length > 0){this.#validate();}
+		if(this.#dataBuffer.length >= minPacketLength){this.#validate();}
 	}
 
 	#buildManifest(data:Buffer):void {
@@ -175,14 +177,14 @@ class Client {
 		this.log(this.#address + "\nManifest Built, API Ready");
 	}
 
-	#processData(id:number, data:Buffer):void {
+	#processData(id:number, data:Buffer, packet:Buffer):void {
 		const item = this.#manifest.get(id);
 		if(item === undefined){return;}
 
 		if(id === -1){this.#buildManifest(data);}
 		else{item.buffer = data;}
 
-		this.#transmitLog(item, data, "Rx");
+		this.#transmitLog(item, packet, "Rx");
 
 		item.callback();
 	}
@@ -200,7 +202,7 @@ class Client {
 		if(!this.logTransmits){return;}
 		const equals = " = " + item.value?.toString();
 		const assign = showValue ? equals : "";
-		console.log(`${this.#address} | ${type}  ${item.id.toString()}  ${item.alias ?? item.name}${assign}`, buffer);
+		console.log(`${this.#address} | ${type} (${item.id.toString()}) ${item.alias ?? item.name}${assign} |`, buffer);
 	}
 
 	log(message:string):void {
