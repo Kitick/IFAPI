@@ -104,4 +104,11 @@ class ServerInterface {
 	writeState(command:string, value:stateValue):void {
 		this.#server.send("write", command, value);
 	}
+
+	async setState(command:string, value:stateValue):Promise<void> {
+		const current = await this.readState(command);
+		if(current !== value){
+			this.writeState(command, value);
+		}
+	}
 }
