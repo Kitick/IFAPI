@@ -1,4 +1,4 @@
-class PID {
+class PVA {
 	lastError = 0;
 	last2Error = 0;
 	output = 0;
@@ -6,7 +6,7 @@ class PID {
 	cyclical:boolean;
 	inverted:boolean;
 
-	constructor(public kp:number = 0, public ki:number = 0, public kd:number = 0, public minValue:number = -Infinity, public maxValue:number = Infinity, public maxDelta:number = Infinity, public options:{
+	constructor(public kp:number = 0, public kv:number = 0, public ka:number = 0, public minValue:number = -Infinity, public maxValue:number = Infinity, public maxDelta:number = Infinity, public options:{
 		cyclical?:boolean,
 		inverted?:boolean
 	} = {}){
@@ -53,23 +53,23 @@ class PID {
 		return error;
 	}
 
-	update(current:number, target:number, dt:number = 1000):number {
-		dt /= 1000;
+	update(current:number, target:number, dt:number = 1, ms:boolean = false):number {
+		if(ms){dt /= 1000};
 
 		const error = this.#calcError(current, target);
-		const deltaE = error - this.lastError;
-		const deltaE2 = this.lastError - this.last2Error;
+		const velocity = (error - this.lastError);
+		const lastVelocity = (this.lastError - this.last2Error);
+		const accel = (velocity - lastVelocity);
 
-		const deltaP = this.kp * deltaE;
-		const deltaI = this.ki * error;
-		const deltaD = this.kd * (deltaE - deltaE2);
-
-		let deltaOut = deltaP + deltaI + deltaD;
-
+		const deltaP = this.kp * error * dt;
+		const deltaV = this.kv * velocity * dt;
+		const deltaA = this.ka * accel * dt;
 		const maxDelta = this.maxDelta * dt;
+
+		let deltaOut = deltaP + deltaV + deltaA;
 		deltaOut = this.#clampValue(deltaOut, -maxDelta, maxDelta);
 
-		if(this.inverted){deltaOut *= -1;}
+		if(this.inverted){deltaOut = -deltaOut;}
 
 		this.last2Error = this.lastError;
 		this.lastError = error;

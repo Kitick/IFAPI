@@ -7,7 +7,8 @@ const autotrim = new AutoFunction("trim", 1000,
 	states as [boolean, number, number];
 
 	if(onground){
-		if(trim !== 0){server.writeState("trim", 0);}
+		if(trim !== 0){server.setState("trim", 0);}
+		autotrim.arm();
 		return;
 	}
 
@@ -25,7 +26,7 @@ const autotrim = new AutoFunction("trim", 1000,
 		let newTrim = trim + mod * Math.sign(pitch);
 		newTrim = Math.round(newTrim / mod) * mod;
 
-		server.writeState("trim", newTrim);
+		if(trim !== newTrim){server.writeState("trim", newTrim);}
 	}
 });
 
@@ -37,19 +38,19 @@ const autolights = new AutoFunction("lights", 2000,
 	const [altitudeAGL, onground, onrunway, gear] =
 	states as [number, boolean, boolean, boolean];
 
-	server.writeState("master", true);
-	server.writeState("beaconlights", true);
-	server.writeState("navlights", true);
+	server.setState("master", true);
+	server.setState("beaconlights", true);
+	server.setState("navlights", true);
 
 	if(onground){
-		server.writeState("strobelights", onrunway);
-		server.writeState("landinglights", onrunway);
+		server.setState("strobelights", onrunway);
+		server.setState("landinglights", onrunway);
 	}
 	else{
-		server.writeState("strobelights", true);
+		server.setState("strobelights", true);
 
-		if(altitudeAGL < 1000 && gear){server.writeState("landinglights", true);}
-		else{server.writeState("landinglights", false);}
+		if(altitudeAGL < 1000){server.setState("landinglights", gear);}
+		else{server.setState("landinglights", false);}
 	}
 });
 
@@ -135,11 +136,11 @@ const autoflaps = new AutoFunction("flaps", 1000,
 });
 
 const autospoilers = new AutoFunction("spoilers", 1000,
-	["spoilers", "airspeed", "spd", "altitude", "altitudeAGL", "onrunway", "onground"],
+	["airspeed", "spd", "altitude", "altitudeAGL", "onrunway", "onground"],
 	[],
 	[], (states, inputs) => {
 
-	const [spoilers, airspeed, spd, altitude, altitudeAGL, onrunway, onground] =
+	const [airspeed, spd, altitude, altitudeAGL, onrunway, onground] =
 	states as [number, number, number, number, number, boolean, boolean];
 
 	let newSpoilers = 0;
@@ -151,7 +152,7 @@ const autospoilers = new AutoFunction("spoilers", 1000,
 		newSpoilers = 1;
 	}
 
-	if(newSpoilers !== spoilers){server.writeState("spoilers", newSpoilers);}
+	server.setState("spoilers", newSpoilers);
 });
 
 const autospeed = new AutoFunction("autospeed", 1000,
@@ -278,7 +279,7 @@ const setrunway = new AutoFunction("setrunway", -1,
 
 	dom.write("latref", latref);
 	dom.write("longref", longref);
-	dom.write("hdgref", hdgref);
+	dom.write("hdgref", null);
 	dom.write("altref", null);
 });
 
@@ -451,7 +452,7 @@ const flyto = new AutoFunction("flyto", 500,
 	const intAngle = 45;
 	const intDist = 1;
 
-	let correction = 100 * absTrack * (flyto.memory.manual ?? 1);
+	let correction = 200 * absTrack * (flyto.memory.manual ?? 1);
 	correction = Math.min(correction, 30);
 
 	if(absTrack > intDist){correction = intAngle;}
