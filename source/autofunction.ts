@@ -108,7 +108,7 @@ class AutoFunction {
 		const states = await server.readStates(...this.#states) as stateValue[];
 		const inputs = dom.readInputs(...this.#inputs) as stateValue[];
 
-		this.#code(states, inputs);
+		await this.#code(states, inputs); // Some functions may be async
 
 		if(!this.#armed && wasArmed){
 			this.#setTrigger();
