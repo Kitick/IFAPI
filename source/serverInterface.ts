@@ -105,9 +105,17 @@ class ServerInterface {
 		this.#server.send("write", command, value);
 	}
 
-	async setState(command:string, value:stateValue):Promise<void> {
+	async setState(command:string, value:stateValue, round:number = 3):Promise<void> {
 		const current = await this.readState(command);
-		if(current !== value){
+
+		if(typeof current === "number" && typeof value === "number"){
+			const tolerance = 10 ** -round;
+
+			if(Math.abs(current - value) >= tolerance){
+				this.writeState(command, value);
+			}
+		}
+		else if(current !== value){
 			this.writeState(command, value);
 		}
 	}
