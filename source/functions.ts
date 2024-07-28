@@ -270,12 +270,10 @@ const setrunway = new AutoFunction("setrunway", -1,
 		return;
 	}
 
-	const runway = fpl[rwIndex][2] + fpl[rwIndex][3] + "0";
 	const runwayCoords = coordinates.split(" ")[rwIndex].split(",");
 
 	const latref = parseFloat(runwayCoords[0]);
 	const longref = parseFloat(runwayCoords[1]);
-	const hdgref = parseInt(runway);
 
 	dom.write("latref", latref);
 	dom.write("longref", longref);
@@ -588,11 +586,11 @@ const goaround = new AutoFunction("goaround", -1,
 		alt += agl;
 	}
 
-	server.writeState("spd", climbspd);
-	server.writeState("alt", alt);
-	server.writeState("spdon", true);
-	server.writeState("alton", true);
-	server.writeState("hdgon", true);
+	server.setState("spd", climbspd);
+	server.setState("alt", alt);
+	server.setState("spdon", true);
+	server.setState("alton", true);
+	server.setState("hdgon", true);
 
 	altchange.setActive(true);
 });
