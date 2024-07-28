@@ -57,7 +57,7 @@ const spdControl = new AutoFunction("spd", 50,
 	if(usingN1){
 		n1PID.maxValue = n1sel;
 
-		const targetN1 = n1PID.update(airspeed, target, true);
+		const targetN1 = n1PID.update(airspeed, target);
 		output = n1ThrottlePID.update(n1, targetN1);
 	}
 	else{
@@ -87,7 +87,7 @@ const flcControl = new AutoFunction("flc", 100,
 	}
 
 	if(flcControl.memory.vsPID === undefined){
-		flcControl.memory.vsPID = new PVA(1, 10, 0, undefined, undefined, 200, {inverted:true});
+		flcControl.memory.vsPID = new PVA(5, 25, 0, undefined, undefined, 200, {inverted:true});
 	}
 
 	const vsPID = flcControl.memory.vsPID as PVA;
@@ -108,7 +108,7 @@ const flcControl = new AutoFunction("flc", 100,
 		vsPID.maxValue = 0;
 	}
 
-	const vs = vsPID.update(airspeed, spdsel);
+	const vs = vsPID.update(airspeed, spdsel, true);
 
 	server.setState("spdon", false);
 	server.setState("alton", false);
