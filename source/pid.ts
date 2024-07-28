@@ -1,17 +1,18 @@
 class PVA {
-	lastError = 0;
-	last2Error = 0;
-	output = 0;
+	#lastError:number = 0;
+	#last2Error:number = 0;
+	#lastTime:number = 0;
+	#output:number = 0;
 
-	cyclical:boolean;
-	inverted:boolean;
+	#cyclical:boolean;
+	#inverted:boolean;
 
 	constructor(public kp:number = 0, public kv:number = 0, public ka:number = 0, public minValue:number = -Infinity, public maxValue:number = Infinity, public maxDelta:number = Infinity, public options:{
 		cyclical?:boolean,
 		inverted?:boolean
 	} = {}){
-		this.cyclical = options.cyclical ?? false;
-		this.inverted = options.inverted ?? false;
+		this.#cyclical = options.cyclical ?? false;
+		this.#inverted = options.inverted ?? false;
 	}
 
 	#modulus(value:number):number {
@@ -42,7 +43,7 @@ class PVA {
 	#calcError(current:number, target:number):number {
 		let error = target - current;
 
-		if(this.cyclical){
+		if(this.#cyclical){
 			current = this.#modulus(current);
 			target = this.#modulus(target);
 
@@ -53,30 +54,60 @@ class PVA {
 		return error;
 	}
 
-	update(current:number, target:number, dt:number = 1, ms:boolean = false):number {
-		if(ms){dt /= 1000};
+	init(output:number = 0):void {
+		this.#output = output;
+		this.#lastTime = performance.now() / 1000;
+	}
+
+	update(current:number, target:number, log = false):number {
+		const currentTime = performance.now() / 1000;
+		const dt = currentTime - this.#lastTime;
+		if(dt === 0){return this.#output;}
+
+		this.#lastTime = currentTime;
 
 		const error = this.#calcError(current, target);
-		const velocity = (error - this.lastError);
-		const lastVelocity = (this.lastError - this.last2Error);
-		const accel = (velocity - lastVelocity);
+		const velocity = (error - this.#lastError) / dt;
+		const lastVelocity = (this.#lastError - this.#last2Error) / dt;
+		const acceleration = (velocity - lastVelocity) / dt;
 
-		const deltaP = this.kp * error * dt;
-		const deltaV = this.kv * velocity * dt;
-		const deltaA = this.ka * accel * dt;
+		this.#last2Error = this.#lastError;
+		this.#lastError = error;
+
+		const deltaP = this.kp * error;
+		const deltaV = this.kv * velocity;
+		const deltaA = this.ka * acceleration;
+
+		let deltaOut = (deltaP + deltaV + deltaA) * dt;
 		const maxDelta = this.maxDelta * dt;
 
-		let deltaOut = deltaP + deltaV + deltaA;
 		deltaOut = this.#clampValue(deltaOut, -maxDelta, maxDelta);
 
-		if(this.inverted){deltaOut = -deltaOut;}
+		if(log){
+			console.clear();
+			console.table({
+				"State":{
+					"Error":error.toFixed(2),
+					"Velocity":velocity.toFixed(2),
+					"Acceleration":acceleration.toFixed(2),
+					"Output":this.#output.toFixed(2),
+					"Time":currentTime.toFixed(2),
+				},
+				"Output":{
+					"Error":deltaP.toFixed(2),
+					"Velocity":deltaV.toFixed(2),
+					"Acceleration":deltaA.toFixed(2),
+					"Output":(deltaOut).toFixed(2),
+					"Time":dt.toFixed(2),
+				}
+			});
+		}
 
-		this.last2Error = this.lastError;
-		this.lastError = error;
+		if(this.#inverted){deltaOut = -deltaOut;}
 
-		this.output += deltaOut;
-		this.output = this.#clampValue(this.output, this.minValue, this.maxValue);
+		this.#output += deltaOut;
+		this.#output = this.#clampValue(this.#output, this.minValue, this.maxValue);
 
-		return this.output;
+		return this.#output;
 	}
 }
