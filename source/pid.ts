@@ -66,6 +66,17 @@ class PVA {
 
 		this.#lastTime = currentTime;
 
+		const maxDelta = this.maxDelta * dt;
+
+		if(this.#output <= this.minValue - maxDelta){
+			this.#output += maxDelta;
+			return this.#output;
+		}
+		else if(this.#output >= this.maxValue + maxDelta){
+			this.#output -= maxDelta;
+			return this.#output;
+		}
+
 		const error = this.#calcError(current, target);
 		const velocity = (error - this.#lastError) / dt;
 		const lastVelocity = (this.#lastError - this.#last2Error) / dt;
@@ -79,9 +90,12 @@ class PVA {
 		const deltaA = this.ka * acceleration;
 
 		let deltaOut = (deltaP + deltaV + deltaA) * dt;
-		const maxDelta = this.maxDelta * dt;
-
 		deltaOut = this.#clampValue(deltaOut, -maxDelta, maxDelta);
+
+		if(this.#inverted){deltaOut = -deltaOut;}
+
+		this.#output += deltaOut;
+		this.#output = this.#clampValue(this.#output, this.minValue, this.maxValue);
 
 		if(log){
 			console.clear();
@@ -93,20 +107,21 @@ class PVA {
 					"Output":this.#output.toFixed(2),
 					"Time":currentTime.toFixed(2),
 				},
+				"Gain":{
+					"Error":this.kp.toFixed(2),
+					"Velocity":this.kv.toFixed(2),
+					"Acceleration":this.ka.toFixed(2),
+					"Output":maxDelta.toFixed(2),
+				},
 				"Output":{
 					"Error":deltaP.toFixed(2),
 					"Velocity":deltaV.toFixed(2),
 					"Acceleration":deltaA.toFixed(2),
-					"Output":(deltaOut).toFixed(2),
+					"Output":deltaOut.toFixed(2),
 					"Time":dt.toFixed(2),
 				}
 			});
 		}
-
-		if(this.#inverted){deltaOut = -deltaOut;}
-
-		this.#output += deltaOut;
-		this.#output = this.#clampValue(this.#output, this.minValue, this.maxValue);
 
 		return this.#output;
 	}
