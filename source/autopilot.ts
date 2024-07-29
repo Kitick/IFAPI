@@ -11,11 +11,6 @@ const spdControl = new AutoFunction("spd", 50,
 
 	const n1sel = dom.readInput("n1sel") as number|null;
 
-	if(!apmaster){
-		spdControl.error();
-		return;
-	}
-
 	if(spdControl.memory.ThrottlePID === undefined){
 		spdControl.memory.ThrottlePID = new PVA(1, 10, 0, -100, 100, 20 * 2);
 
@@ -23,6 +18,8 @@ const spdControl = new AutoFunction("spd", 50,
 		spdControl.memory.n1PID = new PVA(1, 5, 0, 15, 110);
 		spdControl.memory.n1ThrottlePID = new PVA(2, 1, 0, -100, 100, 20 * 2);
 	}
+
+	if(!apmaster){return;}
 
 	const ThrottlePID = spdControl.memory.ThrottlePID as PVA;
 	const n1PID = spdControl.memory.n1PID as PVA;
@@ -46,7 +43,7 @@ const spdControl = new AutoFunction("spd", 50,
 	}
 
 	let target = spdsel;
-	const altdiff = (dom.readInput("flcalt") as number ?? 0) - altitude;
+	const altdiff = (dom.readInput("altsel") as number ?? 0) - altitude;
 
 	if(flcControl.isActive() && Math.abs(altdiff) > 100){
 		target += 10 * Math.sign(altdiff);
@@ -70,36 +67,80 @@ const spdControl = new AutoFunction("spd", 50,
 	server.writeState("throttle", output);
 });
 
+const altControl = new AutoFunction("alt", 100,
+	["altitude"],
+	["apmaster", "altsel"],
+	[], async (states, inputs) => {
+
+	const [altitude] =
+	states as [number];
+
+	const [apmaster, altsel] =
+	inputs as [boolean, number];
+
+	if(altControl.memory.vsPID === undefined){
+		altControl.memory.vsPID = new PVA(1, 15, 0, -2000, 2000, 200);
+	}
+
+	if(flcControl.isActive()){
+		altControl.stage = 0;
+		altControl.arm();
+		return;
+	}
+
+	if(!apmaster){return;}
+
+	const vsPID = altControl.memory.vsPID as PVA;
+
+	if(altControl.stage === 0){
+		altControl.stage++;
+
+		altControl.memory.althold = altsel;
+
+		const vs = await server.readState("verticalspeed") as number;
+		vsPID.init(vs);
+	}
+
+	const althold = altControl.memory.althold;
+
+	const targetVS = vsPID.update(altitude, althold, true);
+
+	server.setState("alton", false);
+	server.setState("vson", true);
+	server.setState("alt", althold);
+
+	server.writeState("vs", targetVS);
+});
+
 const flcControl = new AutoFunction("flc", 100,
 	["airspeed", "altitude"],
-	["apmaster", "spdsel", "flcalt"],
+	["apmaster", "spdsel", "altsel"],
 	[], async (states, inputs) => {
 
 	const [airspeed, altitude] =
 	states as [number, number];
 
-	const [apmaster, spdsel, flcalt] =
+	const [apmaster, spdsel, altsel] =
 	inputs as [boolean, number, number];
 
-	if(!apmaster){
-		flcControl.error();
-		return;
+	if(flcControl.memory.vsPID === undefined){
+		flcControl.memory.vsPID = new PVA(20, 50, 0, undefined, undefined, 200, {inverted:true});
 	}
 
-	if(flcControl.memory.vsPID === undefined){
-		flcControl.memory.vsPID = new PVA(5, 25, 0, undefined, undefined, 200, {inverted:true});
-	}
+	if(!apmaster){return;}
+
+	altControl.setActive(true);
 
 	const vsPID = flcControl.memory.vsPID as PVA;
 
 	if(flcControl.stage === 0){
 		flcControl.stage++;
 
-		const vs = await server.readState("vs") as number;
+		const vs = await server.readState("verticalspeed") as number;
 		vsPID.init(vs);
 	}
 
-	if(flcalt > altitude){
+	if(altsel > altitude){
 		vsPID.minValue = 0;
 		vsPID.maxValue = 5000;
 	}
@@ -108,16 +149,16 @@ const flcControl = new AutoFunction("flc", 100,
 		vsPID.maxValue = 0;
 	}
 
-	const vs = vsPID.update(airspeed, spdsel, true);
+	const targetVS = vsPID.update(airspeed, spdsel, true);
 
 	server.setState("spdon", false);
 	server.setState("alton", false);
 	server.setState("vson", true);
 
 	server.setState("spd", spdsel);
-	server.setState("alt", flcalt);
+	server.setState("alt", altsel);
 
-	server.writeState("vs", vs);
+	server.writeState("vs", targetVS);
 });
 
 /*
@@ -127,33 +168,4 @@ alt via vs | vs
 
 speed via n1 | n1
 n1 via throttle | n1
-*/
-
-/*
-const n1Control = new AutoFunction("n1", 50,
-	["n1"],
-	["apmaster", "n1sel"],
-	[], (states, inputs) => {
-
-	const [n1] =
-	states as [number];
-
-	const [apmaster, n1sel] =
-	inputs as [boolean, number];
-
-	if(!apmaster){
-		n1Control.error();
-		return;
-	}
-
-	if(n1Control.memory.n1ThrottlePID === undefined){
-		n1Control.memory.n1ThrottlePID = new PID(10, 1, 0, -100, 100, 20 * 2);
-	}
-
-	const n1ThrottlePID = n1Control.memory.n1ThrottlePID as PID;
-	const throttle = n1ThrottlePID.update(n1, n1sel, n1Control.delay);
-
-	write("spdon", false);
-	write("throttle", throttle);
-});
 */
