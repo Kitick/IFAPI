@@ -450,7 +450,7 @@ const flyto = new AutoFunction("flyto", 500,
 	const intAngle = 45;
 	const intDist = 1;
 
-	let correction = 200 * absTrack * (flyto.memory.manual ?? 1);
+	let correction = 150 * absTrack * (flyto.memory.manual ?? 1);
 	correction = Math.min(correction, 30);
 
 	if(absTrack > intDist){correction = intAngle;}
