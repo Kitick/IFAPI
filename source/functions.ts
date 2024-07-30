@@ -38,19 +38,19 @@ const autolights = new AutoFunction("lights", 2000,
 	const [altitudeAGL, onground, onrunway, gear] =
 	states as [number, boolean, boolean, boolean];
 
-	server.setState("master", true);
-	server.setState("beaconlights", true);
-	server.setState("navlights", true);
+	server.setState("master", 1);
+	server.setState("beaconlights", 1);
+	server.setState("navlights", 1);
 
 	if(onground){
-		server.setState("strobelights", onrunway);
-		server.setState("landinglights", onrunway);
+		server.setState("strobelights", Number(onrunway));
+		server.setState("landinglights", Number(onrunway));
 	}
 	else{
-		server.setState("strobelights", true);
+		server.setState("strobelights", 1);
 
-		if(altitudeAGL < 1000){server.setState("landinglights", gear);}
-		else{server.setState("landinglights", false);}
+		if(altitudeAGL < 1000){server.setState("landinglights", Number(gear));}
+		else{server.setState("landinglights", 0);}
 	}
 });
 
