@@ -1,6 +1,7 @@
 class ServerInterface {
 	#server = (window as any).electron;
 
+	#pingInterval:NodeJS.Timeout|null = null;
 	pingDOM:HTMLElement|null = null;
 
 	#requestIndex:number = 0;
@@ -62,7 +63,9 @@ class ServerInterface {
 
 		(document.getElementById("address") as HTMLInputElement).value = ip;
 		setHidden(false);
-		setInterval(() => {this.ping();}, 1000);
+
+		if(this.#pingInterval !== null){clearInterval(this.#pingInterval);}
+		this.#pingInterval = setInterval(() => {this.ping();}, 1000);
 
 		return ip;
 	}
