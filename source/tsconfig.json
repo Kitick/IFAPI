@@ -1,11 +1,11 @@
 {
-"files":["types.ts", "cache.ts", "profile.ts", "autofunction.ts", "helpers.ts", "functions.ts", "index.ts", "socket.js"],
+"files":["types.ts", "serverInterface.ts", "domInterface.ts", "profile.ts", "pid.ts", "autoFunction.ts", "helpers.ts", "index.ts", "autopilot.ts", "functions.ts"],
 "compilerOptions": {
-    "target": "esnext",
-    "outFile": "../public/index.js",
-    "allowJs": true,
-    "strict": true,
-    "alwaysStrict": true,
-    "skipLibCheck": true
-    }
+	"target": "esnext",
+	"outFile": "../public/index.js",
+	"allowJs": true,
+	"strict": true,
+	"alwaysStrict": true,
+	"skipLibCheck": true
+	}
 }

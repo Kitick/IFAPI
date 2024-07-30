@@ -1,98 +1,108 @@
 class ProfileStorage {
-    static defaultName:string = "#default";
+	static defaultName:string = "#default";
 
-    #selectDOM:HTMLSelectElement;
+	#selectDOM:HTMLSelectElement;
 
-    constructor(dom:HTMLSelectElement){
-        this.#selectDOM = dom;
+	constructor(dom:HTMLSelectElement){
+		this.#selectDOM = dom;
 
-        const name = ProfileStorage.defaultName;
+		const name = ProfileStorage.defaultName;
 
-        if(localStorage.getItem(name) === null){this.save(name);}
+		if(localStorage.getItem(name) === null){this.save(name);}
 
-        this.#build();
-        this.load(name);
-    }
+		this.#build();
+		this.load(name);
+	}
 
-    #build():void {
-        let configs = [];
-        for(let i = 0, length = localStorage.length; i < length; i++){
-            configs.push(localStorage.key(i) as string);
-        }
+	#build():void {
+		let configs = [];
+		for(let i = 0, length = localStorage.length; i < length; i++){
+			configs.push(localStorage.key(i) as string);
+		}
 
-        configs.sort();
+		configs.sort();
 
-        this.#selectDOM.innerHTML = "";
-        configs.forEach(name => {
-            let option = new Option(name, name);
-            this.#selectDOM.appendChild(option);
-        });
-    }
+		this.#selectDOM.innerHTML = "";
+		configs.forEach(name => {
+			let option = new Option(name, name);
+			this.#selectDOM.appendChild(option);
+		});
+	}
 
-    #flash(id:string, colorName:string):void {
-        const dom = document.getElementById(id);
-        if(dom === null){return;}
+	#flash(id:string, colorName:string):void {
+		const dom = document.getElementById(id);
+		if(dom === null){return;}
 
-        dom.className = colorName;
-        setTimeout(() => {dom.className = "off";}, 500);
-    }
+		dom.classList.remove("off");
+		dom.classList.add(colorName);
 
-    add(name = prompt("Enter the name of the profile:")):void {
-        while(name === ""){name = prompt("Name cannot be blank:");}
-        if(name === null){return;}
+		setTimeout(() => {
+			dom.classList.remove(colorName);
+			dom.classList.add("off");
+		}, 500);
+	}
 
-        this.save(name);
+	add(name?:string):void {
+		const nameInput = document.getElementById("profile-name") as HTMLInputElement;
 
-        this.#build();
-        this.#selectDOM.value = name;
-    }
+		if(name === undefined){
+			name = nameInput.value as string;
+		}
 
-    save(name:string = this.#selectDOM.value):void {
-        if(name === ""){this.add(); return;}
+		nameInput.value = "";
 
-        const data = Autofunction.cache.loadAll();
+		this.save(name);
 
-        let profile:any = {};
-        data.forEach((value, key) => {
-            profile[key] = value;
-        });
+		this.#build();
+		this.#selectDOM.value = name;
+	}
 
-        localStorage.setItem(name, JSON.stringify(profile));
+	save(name:string = this.#selectDOM.value):void {
+		if(name === ""){this.add(); return;}
 
-        this.#flash("save", "active");
-    }
+		const data = dom.readAll();
 
-    load(name:string = this.#selectDOM.value):void {
-        const profileString = localStorage.getItem(name);
+		let profile:any = {};
+		data.forEach((value, key) => {
+			profile[key] = value;
+		});
 
-        if(name === "" || profileString === null){this.#flash("load", "error"); return;}
+		localStorage.setItem(name, JSON.stringify(profile));
 
-        this.#selectDOM.value = name;
-        const loadEmpty = (document.getElementById("loadempty") as HTMLInputElement).checked;
+		this.#flash("profile-save", "active");
+	}
 
-        const profile = JSON.parse(profileString);
-        for(let id in profile){
-            let value = profile[id] as dataValue;
+	load(name:string = this.#selectDOM.value):void {
+		const profileString = localStorage.getItem(name);
 
-            if(value !== null){
-                let testValue = parseFloat(value.toString());
-                if(!isNaN(testValue)){value = testValue;}
-            }
-            else if(!loadEmpty){continue;}
+		if(name === "" || profileString === null){this.#flash("profile-load", "error"); return;}
 
-            Autofunction.cache.save(id, value);
-        }
+		this.#selectDOM.value = name;
+		const loadEmpty = (document.getElementById("loadempty") as HTMLInputElement).checked;
 
-        this.#flash("load", "active");
-    }
+		const profile = JSON.parse(profileString);
+		for(let id in profile){
+			let value = profile[id] as dataValue;
 
-    remove(name:string = this.#selectDOM.value):void {
-        if(name === ""){return;}
+			if(value !== null){
+				let testValue = parseFloat(value.toString());
+				if(!isNaN(testValue)){value = testValue;}
+			}
+			else if(!loadEmpty){continue;}
 
-        const conf = confirm("Are you sure you want to delete: " + name);
-        if(!conf){return;}
+			dom.write(id, value);
+		}
 
-        localStorage.removeItem(name);
-        this.#build();
-    }
+		this.#flash("profile-load", "active");
+	}
+
+	remove(name:string = this.#selectDOM.value):void {
+		if(name === ""){return;}
+
+		const conf = confirm("Are you sure you want to delete: " + name);
+		if(!conf){return;}
+
+		localStorage.removeItem(name);
+		this.#build();
+	}
 }

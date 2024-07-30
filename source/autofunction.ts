@@ -1,143 +1,152 @@
-class Autofunction {
-    #button:HTMLElement;
-    #timeout:NodeJS.Timeout|null = null;
-    #states:dataMap = new Map();
-    #inputs:string[] = [];
-    #dependents:Autofunction[] = [];
-    #numStates = 0;
-    #validStates = 0;
-    #active = false;
-    #armed = false;
-    #code:funcCode;
+class AutoFunction {
+	#triggerDOM:HTMLElement;
+	#statusDOM:HTMLElement|null;
+	#status!:string;
 
-    stage = 0;
+	#timeout:NodeJS.Timeout|null = null;
 
-    static cache = new StateCache();
+	#states:string[] = [];
+	#inputs:string[] = [];
+	#dependents:AutoFunction[] = [];
 
-    constructor(button:string, public delay:number, inputs:string[], states:string[], dependents:Autofunction[], code:funcCode){
-        const element = document.getElementById(button);
-        if(element === null){throw "Element " + button + " is undefined";}
+	#active:boolean = false;
+	#armed:boolean = false;
+	#code:funcCode;
 
-        this.#button = element as HTMLElement;
-        this.#button.addEventListener("click", () => {dependencyCheck(button); this.setActive();});
-        this.#updateButton();
+	memory:any = {};
+	stage = 0;
 
-        this.#numStates = states.length;
-        this.#inputs = inputs;
-        this.#dependents = dependents;
-        this.#code = code;
+	constructor(triggerID:string, public delay:number, states:string[], inputs:string[], dependents:AutoFunction[], code:funcCode){
+		const triggerDOM = document.getElementById(triggerID);
+		this.#statusDOM = document.getElementById(triggerID + "-status");
+		this.status = "Idle";
 
-        this.#inputs.forEach(input => {
-            let element = document.getElementById(input);
-            if(element !== null && element.tagName === "INPUT" && (element as HTMLInputElement).type === "number"){
-                const inputElement = element as HTMLInputElement;
-                const tooltip = document.getElementById("tooltip") as HTMLHeadingElement;
+		if(triggerDOM === null){throw "Element " + triggerID + " is undefined";}
 
-                inputElement.addEventListener("mouseenter", () => {tooltip.innerText = inputElement.placeholder;});
-                inputElement.addEventListener("mouseout", () => {tooltip.innerText = "Tooltip";});
-            }
-        });
+		this.#triggerDOM = triggerDOM as HTMLElement;
+		this.#triggerDOM.addEventListener("click", () => {
+			dependencyCheck(triggerID);
+			this.setActive();
+		});
+		this.#setTrigger();
 
-        states.forEach(state => {
-            this.#states.set(state, null);
-        });
+		this.#states = states;
+		this.#inputs = inputs;
+		this.#dependents = dependents;
+		this.#code = code;
 
-        Autofunction.cache.addArray(inputs);
-    }
+		this.#inputs.forEach(input => {
+			let element = document.getElementById(input);
+			if(element === null || element.tagName !== "INPUT" || (element as HTMLInputElement).type !== "number"){return;}
 
-    getInputs(){return this.#inputs}
-    getDependents(){return this.#dependents;}
+			const inputElement = element as HTMLInputElement;
+			const tooltip = document.getElementById("tooltip") as HTMLHeadingElement;
 
-    isActive(){return this.#active;}
+			inputElement.addEventListener("mouseenter", () => {
+				tooltip.innerText = inputElement.placeholder;
+			});
+			inputElement.addEventListener("mouseout", () => {
+				tooltip.innerText = "Tooltip";
+			});
+		});
+	}
 
-    setActive(state = !this.#active):void {
-        if(this.#active === state){return;}
+	set status(message:string){
+		this.#status = message;
 
-        this.#active = state;
-        this.#updateButton();
+		if(this.#statusDOM === null){return;}
 
-        if(this.#active){
-            this.stage = 0;
-            this.#run();
-            return;
-        }
+		const text = "STATUS:\n\n" + message;
 
-        if(this.#timeout !== null){
-            clearTimeout(this.#timeout);
-            this.#timeout = null;
-        }
-    }
+		if(this.#statusDOM.innerText !== text){this.#statusDOM.innerText = text;}
+	}
 
-    #updateButton():void {
-        this.#button.className = this.#active ? "active" : "off";
-    }
+	get status():string {return this.#status;}
 
-    #run():void {
-        const valid = this.validateInputs(true);
+	isActive(){return this.#active;}
 
-        if(!valid){this.error(); return;}
+	setActive(state = !this.#active):void {
+		if(this.#active === state){return;}
 
-        this.#readStates(() => {
-            const wasArmed = this.#armed;
-            this.#armed = false;
+		this.#active = state;
+		this.#setTrigger();
 
-            this.#code({
-                states:this.#states,
-                inputs:Autofunction.cache.loadArray(this.#inputs)
-            });
+		if(this.#active){
+			this.stage = 0;
+			this.#run();
+			return;
+		}
 
-            if(!this.#armed && wasArmed){
-                this.#updateButton();
-            }
+		clearTimeout(this.#timeout ?? undefined);
+		this.#timeout = null;
+	}
 
-            if(this.delay === -1){
-                this.setActive(false);
-                return;
-            }
+	#setTrigger(state?:string):void {
+		const classList = this.#triggerDOM.classList;
+		const states = ["off", "active", "armed", "error"];
 
-            if(this.#active && this.#timeout === null){
-                this.#timeout = setTimeout(() => {this.#timeout = null; this.#run();}, this.delay);
-            }
-        });
-    }
+		if(state === undefined){state = this.isActive() ? "active" : "off";}
 
-    #readStates(callback = () => {}):void {
-        if(this.#numStates === 0){
-            callback();
-            return;
-        }
+		if(classList.contains(state)){return;}
 
-        this.#validStates = 0;
-        this.#states.forEach((value, state) => {
-            read(state, returnValue => {this.#stateReturn(state, returnValue, callback);});
-        });
-    }
+		states.forEach(option => {
+			classList.remove(option);
+		});
 
-    #stateReturn(state:string, value:stateValue, callback = () => {}):void {
-        this.#states.set(state, value);
-        this.#validStates++;
+		classList.add(state);
+	}
 
-        if(this.#validStates === this.#numStates){callback();}
-    }
+	async #run():Promise<void> {
+		if(!this.validateInputs(true)){
+			this.error("Some Required Inputs are Missing");
+			return;
+		}
 
-    validateInputs(doError = false):boolean {
-        let valid = Autofunction.cache.isValidArray(this.#inputs, doError);
+		const wasArmed = this.#armed;
+		this.#armed = false;
 
-        this.#dependents.forEach(dependent => {
-            valid = dependent.validateInputs() && valid;
-        });
+		const states = await server.readStates(...this.#states) as stateValue[];
+		const inputs = dom.readInputs(...this.#inputs) as stateValue[];
 
-        return valid;
-    }
+		await this.#code(states, inputs); // Some functions may be async
 
-    arm():void {
-        this.#armed = true;
-        this.#button.className = "armed";
-    }
+		if(!this.#armed && wasArmed){
+			this.#setTrigger();
+		}
 
-    error():void {
-        this.#active = false;
-        this.#button.className = "error";
-        this.#timeout = setTimeout(() => {this.#updateButton();}, 2000);
-    }
+		if(this.delay === -1){
+			this.setActive(false);
+			return;
+		}
+
+		if(this.#active){
+			this.#timeout = setTimeout(() => {
+				this.#timeout = null;
+				this.#run();
+			}, this.delay);
+		}
+	}
+
+	validateInputs(doError = false):boolean {
+		let valid = dom.validate(doError, ...this.#inputs);
+
+		this.#dependents.forEach(dependent => {
+			valid = dependent.validateInputs() && valid;
+		});
+
+		return valid;
+	}
+
+	arm():void {
+		this.#armed = true;
+		this.#setTrigger("armed");
+	}
+
+	error(message?:string):void {
+		if(message !== undefined){this.status = message;}
+
+		this.setActive(false);
+		this.#setTrigger("error");
+		setTimeout(() => {this.#setTrigger();}, 2000);
+	}
 }
