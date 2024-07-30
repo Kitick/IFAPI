@@ -12,7 +12,7 @@ const spdControl = new AutoFunction("spd", 50,
 	const n1sel = dom.readInput("n1sel") as number|null;
 
 	if(spdControl.memory.ThrottlePID === undefined){
-		spdControl.memory.ThrottlePID = new PVA(1, 10, 0, -100, 100, 20 * 2);
+		spdControl.memory.ThrottlePID = new PVA(1, 15, 0, -100, 100, 20 * 2);
 
 		// if using N1
 		spdControl.memory.n1PID = new PVA(1, 5, 0, 15, 110);
@@ -43,9 +43,9 @@ const spdControl = new AutoFunction("spd", 50,
 	}
 
 	let target = spdsel;
-	const altdiff = (dom.readInput("altsel") as number ?? 0) - altitude;
 
-	if(flcControl.isActive() && Math.abs(altdiff) > 100){
+	if(flcControl.isActive()){
+		const altdiff = (dom.readInput("altsel") as number ?? 0) - altitude;
 		target += 10 * Math.sign(altdiff);
 	}
 
@@ -88,6 +88,14 @@ const altControl = new AutoFunction("alt", 100,
 		return;
 	}
 
+	if(altControl.stage === 0){
+		altControl.memory.althold = altsel;
+	}
+
+	if(altsel !== altControl.memory.althold){
+		altControl.arm();
+	}
+
 	if(!apmaster){return;}
 
 	const vsPID = altControl.memory.vsPID as PVA;
@@ -95,15 +103,13 @@ const altControl = new AutoFunction("alt", 100,
 	if(altControl.stage === 0){
 		altControl.stage++;
 
-		altControl.memory.althold = altsel;
-
 		const vs = await server.readState("verticalspeed") as number;
 		vsPID.init(vs);
 	}
 
 	const althold = altControl.memory.althold;
 
-	const targetVS = vsPID.update(altitude, althold, true);
+	const targetVS = vsPID.update(altitude, althold);
 
 	server.setState("alton", false);
 	server.setState("vson", true);
@@ -124,7 +130,7 @@ const flcControl = new AutoFunction("flc", 100,
 	inputs as [boolean, number, number];
 
 	if(flcControl.memory.vsPID === undefined){
-		flcControl.memory.vsPID = new PVA(20, 50, 0, undefined, undefined, 200, {inverted:true});
+		flcControl.memory.vsPID = new PVA(100, 100, 0, undefined, undefined, 200, {inverted:true});
 	}
 
 	if(!apmaster){return;}
@@ -140,6 +146,15 @@ const flcControl = new AutoFunction("flc", 100,
 		vsPID.init(vs);
 	}
 
+	const altdiff = altsel - altitude;
+	const timetolevel = vsPID.output / vsPID.maxDelta;
+	const timetoalt = (altdiff / vsPID.output) * 60;
+
+	if(Math.abs(timetolevel) >= Math.abs(timetoalt)){
+		flcControl.setActive(false);
+		return;
+	}
+
 	if(altsel > altitude){
 		vsPID.minValue = 0;
 		vsPID.maxValue = 5000;
@@ -149,7 +164,7 @@ const flcControl = new AutoFunction("flc", 100,
 		vsPID.maxValue = 0;
 	}
 
-	const targetVS = vsPID.update(airspeed, spdsel, true);
+	const targetVS = vsPID.update(airspeed, spdsel);
 
 	server.setState("spdon", false);
 	server.setState("alton", false);

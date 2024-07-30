@@ -15,6 +15,8 @@ class PVA {
 		this.#inverted = options.inverted ?? false;
 	}
 
+	get output():number {return this.#output;}
+
 	#modulus(value:number):number {
 		const range = this.maxValue - this.minValue;
 		const normalized = ((value - this.minValue) % range + range) % range + this.minValue;
