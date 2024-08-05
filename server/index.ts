@@ -34,13 +34,13 @@ ipcMain.on("stop", async (event:any, [index]:[number]) => {
 	display.send("response", index);
 });
 
-ipcMain.on("read", async (event:any, [index, command]:[number, string]) => {
-	const value = await client.readState(command);
+ipcMain.on("read", async (event:any, [index, state]:[number, string]) => {
+	const value = await client.readState(state);
 	display.send("response", index, value);
 });
 
-ipcMain.on("write", (event:any, [command, value]:[string, stateValue]) => {
-	client.writeState(command, value);
+ipcMain.on("write", (event:any, [state, value]:[string, stateValue]) => {
+	client.writeState(state, value);
 });
 
 ipcMain.on("ping", async (event:any, [index]:[number]) => {
