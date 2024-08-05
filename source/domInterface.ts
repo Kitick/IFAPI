@@ -54,9 +54,10 @@ class DOMInterface {
 		});
 	}
 
+	readInput<type extends keyof InputTypes>(id:type):InputTypes[type];
+
 	readInput(id:string):dataValue {
-		const value = this.#data.get(id)?.value ?? null;
-		return value;
+		return this.#data.get(id)?.value ?? null;
 	}
 
 	readInputs(...ids:string[]):dataValue[] {
@@ -67,6 +68,18 @@ class DOMInterface {
 		});
 
 		return values;
+	}
+
+	readInputsObject<type extends keyof InputTypes>(...states:type[]):{[key in type]:InputTypes[key]};
+
+	readInputsObject(...ids:string[]):{[key:string]:dataValue} {
+		let returnObject:{[key:string]:dataValue} = {};
+
+		ids.forEach(id => {
+			returnObject[id] = this.readInput(id);
+		});
+
+		return returnObject;
 	}
 
 	readAll():dataMap {

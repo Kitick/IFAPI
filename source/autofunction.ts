@@ -96,6 +96,10 @@ class AutoFunction {
 		classList.add(state);
 	}
 
+	#validateNull<type>(values:(type|null)[]):values is type[] {
+		return values.every(value => value !== null);
+	}
+
 	async #run():Promise<void> {
 		if(!this.validateInputs(true)){
 			this.error("Some Required Inputs are Missing");
@@ -105,8 +109,13 @@ class AutoFunction {
 		const wasArmed = this.#armed;
 		this.#armed = false;
 
-		const states = await server.readStates(...this.#states) as stateValue[];
-		const inputs = dom.readInputs(...this.#inputs) as stateValue[];
+		const states = await server.readStates(...this.#states);
+		const inputs = dom.readInputs(...this.#inputs);
+
+		if(!this.#validateNull(states) || !this.#validateNull(inputs)){
+			this.error("Some Required States are Missing");
+			return;
+		}
 
 		await this.#code(states, inputs); // Some functions may be async
 

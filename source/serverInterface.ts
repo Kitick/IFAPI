@@ -90,36 +90,54 @@ class ServerInterface {
 		return totalPing;
 	}
 
-	async readState(command:string):Promise<dataValue> {
-		return this.#request("read", command);
+	async readState<type extends keyof StateTypes>(state:type):Promise<StateTypes[type]>;
+
+	async readState(state:string):Promise<dataValue> {
+		return this.#request("read", state);
 	}
 
-	async readStates(...commands:string[]):Promise<dataValue[]> {
+	//async readStates<type extends (keyof StateTypes)[]>(...states:type):Promise<{[type2 in keyof type]:type[type2] extends keyof StateTypes ? StateTypes[type[type2]]:never}>;
+
+	async readStates(...states:string[]):Promise<dataValue[]> {
 		let promises:Promise<dataValue>[] = [];
 
-		commands.forEach(command => {
-			promises.push(this.readState(command));
+		states.forEach(state => {
+			promises.push(this.readState(state));
 		});
 
 		return Promise.all(promises);
 	}
 
-	writeState(command:string, value:stateValue):void {
-		this.#server.send("write", command, value);
+	async readStatesObject<type extends keyof StateTypes>(...states:type[]):Promise<{[key in type]:StateTypes[key]}>;
+
+	async readStatesObject(...states:string[]):Promise<{[key:string]:dataValue}> {
+		const values = await this.readStates(...states);
+
+		let returnObject:{[key:string]:dataValue} = {};
+
+		states.forEach((state, index) => {
+			returnObject[state] = values[index];
+		});
+
+		return returnObject;
 	}
 
-	async setState(command:string, value:stateValue, round:number = 3):Promise<void> {
-		const current = await this.readState(command);
+	writeState(state:string, value:stateValue):void {
+		this.#server.send("write", state, value);
+	}
+
+	async setState(state:string, value:stateValue, round:number = 3):Promise<void> {
+		const current = await this.readState(state);
 
 		if(typeof current === "number" && typeof value === "number"){
 			const tolerance = 10 ** -round;
 
 			if(Math.abs(current - value) >= tolerance){
-				this.writeState(command, value);
+				this.writeState(state, value);
 			}
 		}
 		else if(current !== value){
-			this.writeState(command, value);
+			this.writeState(state, value);
 		}
 	}
 }
