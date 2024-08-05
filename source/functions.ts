@@ -3,6 +3,8 @@ const autotrim = new AutoFunction("trim", 1000,
 	[],
 	[], (states, inputs) => {
 
+	//const [onground, pitch, trim] = await server.readStates("onground", "pitch", "trim");
+
 	const [onground, pitch, trim] =
 	states as [boolean, number, number];
 
@@ -167,14 +169,14 @@ const autospeed = new AutoFunction("autospeed", 1000,
 	inputs as [number, number, number, number, number, number];
 
 	// elevation is optional, so its not in the inputs
-	const elevation = dom.readInput("altref") as number|null;
+	const elevation = dom.readInput("altref");
 
 	if(onground){
 		autospeed.arm();
 		return;
 	}
 
-	//const cruisespd = domInterface.load("cruisespd").get("cruisespd") as number|null;
+	//const cruisespd = domInterface.load("cruisespd").get("cruisespd");
 	const alt = (elevation === null) ? altitudeAGL : altitude - elevation;
 
 	let newSpeed = spd;
@@ -247,7 +249,7 @@ const markposition = new AutoFunction("markposition", -1,
 	dom.write("altref", Math.round(altitude));
 });
 
-const setrunway = new AutoFunction("setrunway", -1,
+const getrunway = new AutoFunction("getrunway", -1,
 	["route", "coordinates"],
 	[],
 	[], (states, inputs) => {
@@ -266,7 +268,7 @@ const setrunway = new AutoFunction("setrunway", -1,
 	}
 
 	if(rwIndex === -1){
-		setrunway.error();
+		getrunway.error();
 		return;
 	}
 
@@ -704,7 +706,9 @@ const autoland = new AutoFunction("autoland", 500,
 	altchange.setActive(true);
 	flypattern.setActive(true);
 
-	if(autogear.isActive()){autogear.setActive(option !== "p");}
+	if(autogear.isActive()){
+		autogear.setActive(option !== "p");
+	}
 });
 
 /*
@@ -845,7 +849,7 @@ const callout = new AutoFunction("callout", 250,
 	inputs as [number, number];
 
 	// elevation is optional, so its not in the inputs
-	const elevation = domInterface.read("altref")[0] as number|null;
+	const elevation = domInterface.read("altref");
 	const alt = (elevation === null) ? altitudeAGL : altitude - elevation;
 
 	const v1 = rotate;
