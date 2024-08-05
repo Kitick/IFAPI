@@ -9,10 +9,11 @@ const spdControl = new AutoFunction("spd", 50,
 	const [apmaster, spdsel] =
 	inputs as [boolean, number];
 
-	const n1sel = dom.readInput("n1sel") as number|null;
+	const n1sel = dom.readInput("n1sel");
 
-	if(spdControl.memory.ThrottlePID === undefined){
-		spdControl.memory.ThrottlePID = new PVA(1, 15, 0, -100, 100, 20 * 2);
+	// probably should have only one controller, if no n1 interpret as throttle percent
+	if(spdControl.memory.throttlePID === undefined){
+		spdControl.memory.throttlePID = new PVA(1, 15, 0, -100, 100, 20 * 2);
 
 		// if using N1
 		spdControl.memory.n1PID = new PVA(1, 5, 0, 15, 110);
@@ -21,7 +22,7 @@ const spdControl = new AutoFunction("spd", 50,
 
 	if(!apmaster){return;}
 
-	const ThrottlePID = spdControl.memory.ThrottlePID as PVA;
+	const throttlePID = spdControl.memory.throttlePID as PVA;
 	const n1PID = spdControl.memory.n1PID as PVA;
 	const n1ThrottlePID = spdControl.memory.n1ThrottlePID as PVA;
 
@@ -30,14 +31,14 @@ const spdControl = new AutoFunction("spd", 50,
 	if(spdControl.stage === 0){
 		spdControl.stage++;
 
-		const throttle = await server.readState("throttle") as number;
-		ThrottlePID.init(throttle);
+		const throttle = await server.readState("throttle");
+		throttlePID.init(throttle);
 
 	}
 	if(spdControl.stage === 1 && usingN1){
 		spdControl.stage++;
 
-		const throttle = await server.readState("throttle") as number;
+		const throttle = await server.readState("throttle");
 		n1ThrottlePID.init(throttle);
 		n1PID.init(Number(n1));
 	}
@@ -45,7 +46,7 @@ const spdControl = new AutoFunction("spd", 50,
 	let target = spdsel;
 
 	if(flcControl.isActive()){
-		const altdiff = (dom.readInput("altsel") as number ?? 0) - altitude;
+		const altdiff = (dom.readInput("altsel") ?? 0) - altitude;
 		target += 10 * Math.sign(altdiff);
 	}
 
@@ -58,7 +59,7 @@ const spdControl = new AutoFunction("spd", 50,
 		output = n1ThrottlePID.update(n1, targetN1);
 	}
 	else{
-		output = ThrottlePID.update(airspeed, target);
+		output = throttlePID.update(airspeed, target);
 	}
 
 	server.setState("spdon", false);
@@ -103,7 +104,7 @@ const altControl = new AutoFunction("alt", 100,
 	if(altControl.stage === 0){
 		altControl.stage++;
 
-		const vs = await server.readState("verticalspeed") as number;
+		const vs = await server.readState("verticalspeed");
 		vsPID.init(vs);
 	}
 
@@ -142,7 +143,7 @@ const flcControl = new AutoFunction("flc", 100,
 	if(flcControl.stage === 0){
 		flcControl.stage++;
 
-		const vs = await server.readState("verticalspeed") as number;
+		const vs = await server.readState("verticalspeed");
 		vsPID.init(vs);
 	}
 
