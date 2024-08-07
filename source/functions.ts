@@ -331,13 +331,13 @@ const takeoffconfig = new AutoFunction("takeoffconfig", -1,
 
 const autotakeoff = new AutoFunction("autotakeoff", 500,
 	["onrunway", "n1", "airspeed"],
-	["rotate", "climbspd", "climbthrottle", "takeoffspool", "takeofflnav", "takeoffvnav"],
+	["rotate", "climbspd", "climbthrottle", "takeoffspool", "takeofflnav"],
 	[takeoffconfig, rejecttakeoff], (states, inputs) => {
 
 	const [onrunway, n1, airspeed] =
 	states as [boolean, number|null, number];
 
-	const [rotate, climbspd, climbthrottle, takeoffspool, takeofflnav, takeoffvnav] =
+	const [rotate, climbspd, climbthrottle, takeoffspool, takeofflnav] =
 	inputs as [number, number, number, boolean, boolean, boolean];
 
 	const throttle = 2 * climbthrottle - 100;
