@@ -41,6 +41,12 @@ function dependencyCheck(id:string):void {
 	}
 }
 
+async function sleep(delay:number):Promise<void> {
+	return new Promise(resolve => {
+		setTimeout(resolve, delay);
+	});
+}
+
 /*
 function showfpl(id:string, waypoint:string, div:HTMLDivElement):void {
 	const input = document.createElement("input");

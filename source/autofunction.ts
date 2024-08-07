@@ -3,7 +3,7 @@ class AutoFunction {
 	#statusDOM:HTMLElement|null;
 	#status!:string;
 
-	#timeout:NodeJS.Timeout|null = null;
+	#waiting:boolean = false;
 
 	#states:string[] = [];
 	#inputs:string[] = [];
@@ -71,14 +71,8 @@ class AutoFunction {
 		this.#active = state;
 		this.#setTrigger();
 
-		if(this.#active){
-			this.stage = 0;
-			this.#run();
-			return;
-		}
-
-		clearTimeout(this.#timeout ?? undefined);
-		this.#timeout = null;
+		this.stage = 0;
+		this.#run();
 	}
 
 	#setTrigger(state?:string):void {
@@ -100,7 +94,9 @@ class AutoFunction {
 		return values.every(value => value !== null);
 	}
 
-	async #run():Promise<void> {
+	async #run(override:boolean = false):Promise<void> {
+		if((!this.#active && !override) || this.#waiting){return;}
+
 		if(!this.validateInputs(true)){
 			this.error("Some Required Inputs are Missing");
 			return;
@@ -128,12 +124,11 @@ class AutoFunction {
 			return;
 		}
 
-		if(this.#active){
-			this.#timeout = setTimeout(() => {
-				this.#timeout = null;
-				this.#run();
-			}, this.delay);
-		}
+		this.#waiting = true;
+		await sleep(this.delay);
+		this.#waiting = false;
+
+		this.#run();
 	}
 
 	validateInputs(doError = false):boolean {

@@ -1,46 +1,32 @@
 const spdControl = new AutoFunction("spd", 50,
-	["airspeed", "altitude", "n1"],
+	["airspeed", "altitude", "n1", "throttle"],
 	["apmaster", "spdsel"],
 	[], async (states, inputs) => {
 
-	const [airspeed, altitude, n1] =
-	states as [number, number, number|null];
+	const [airspeed, altitude, n1, throttle] =
+	states as [number, number, number|null, number];
 
 	const [apmaster, spdsel] =
 	inputs as [boolean, number];
 
-	const n1sel = dom.readInput("n1sel");
+	const n1sel = dom.readInput("n1sel") ?? 110;
+	const n1Value = n1 ?? throttle;
 
-	// probably should have only one controller, if no n1 interpret as throttle percent
 	if(spdControl.memory.throttlePID === undefined){
-		spdControl.memory.throttlePID = new PVA(1, 15, 0, -100, 100, 20 * 2);
-
-		// if using N1
+		spdControl.memory.throttlePID = new PVA(2, 1, 0, -100, 100, 15 * 2);
 		spdControl.memory.n1PID = new PVA(1, 5, 0, 15, 110);
-		spdControl.memory.n1ThrottlePID = new PVA(2, 1, 0, -100, 100, 20 * 2);
 	}
 
 	if(!apmaster){return;}
 
 	const throttlePID = spdControl.memory.throttlePID as PVA;
 	const n1PID = spdControl.memory.n1PID as PVA;
-	const n1ThrottlePID = spdControl.memory.n1ThrottlePID as PVA;
-
-	const usingN1 = n1sel !== null && n1 !== null;
 
 	if(spdControl.stage === 0){
 		spdControl.stage++;
 
-		const throttle = await server.readState("throttle");
 		throttlePID.init(throttle);
-
-	}
-	if(spdControl.stage === 1 && usingN1){
-		spdControl.stage++;
-
-		const throttle = await server.readState("throttle");
-		n1ThrottlePID.init(throttle);
-		n1PID.init(Number(n1));
+		n1PID.init(n1Value);
 	}
 
 	let target = spdsel;
@@ -50,17 +36,9 @@ const spdControl = new AutoFunction("spd", 50,
 		target += 10 * Math.sign(altdiff);
 	}
 
-	let output:number;
-
-	if(usingN1){
-		n1PID.maxValue = n1sel;
-
-		const targetN1 = n1PID.update(airspeed, target);
-		output = n1ThrottlePID.update(n1, targetN1);
-	}
-	else{
-		output = throttlePID.update(airspeed, target);
-	}
+	n1PID.maxValue = n1sel;
+	const targetN1 = n1PID.update(airspeed, target);
+	const output = throttlePID.update(n1Value, targetN1);
 
 	server.setState("spdon", false);
 	server.setState("spd", spdsel);
