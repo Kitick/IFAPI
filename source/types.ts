@@ -88,7 +88,7 @@ type InputTypes = { // Copy of DOM ids
 	"cruisespd":number|null,
 
 	"spdsel":number|null,
-	"n1sel":number|null,
+	"n1limit":number|null,
 	"altsel":number|null,
 
 	"rotate":number|null,

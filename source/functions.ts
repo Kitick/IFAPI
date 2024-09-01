@@ -204,7 +204,8 @@ const autospeed = new AutoFunction("autospeed", 1000,
 
 	newSpeed = Math.min(newSpeed, cruisespd);
 
-	if(newSpeed !== spd){server.writeState("spd", newSpeed);}
+	server.setState("spd", newSpeed);
+	dom.write("spdsel", newSpeed);
 });
 
 const altchange = new AutoFunction("altchange", 1000,
@@ -356,6 +357,7 @@ const autotakeoff = new AutoFunction("autotakeoff", 500,
 		altchange.setActive(false);
 
 		server.writeState("spd", climbspd);
+		dom.write("spdsel", climbspd);
 
 		server.writeState("autopilot", true);
 		server.writeState("alton", true);
@@ -631,8 +633,9 @@ const autoland = new AutoFunction("autoland", 500,
 	if(autoland.stage === 2){
 		if(option !== "p"){
 			server.writeState("vs", -200);
+			server.writeState("spd", 0);
+			dom.write("spdsel", 0);
 			server.writeState("spdon", false);
-			server.writeState("throttle", -100);
 		}
 		else{
 			server.writeState("vs", 0);

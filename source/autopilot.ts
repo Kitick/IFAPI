@@ -9,12 +9,12 @@ const spdControl = new AutoFunction("spd", 50,
 	const [apmaster, spdsel] =
 	inputs as [boolean, number];
 
-	const n1sel = dom.readInput("n1sel") ?? 110;
+	const n1limit = dom.readInput("n1limit") ?? 110;
 	const n1Value = n1 ?? throttle;
 
 	if(spdControl.memory.throttlePID === undefined){
 		spdControl.memory.throttlePID = new PVA(2, 1, 0, -100, 100, 15 * 2);
-		spdControl.memory.n1PID = new PVA(1, 5, 0, 15, 110);
+		spdControl.memory.n1PID = new PVA(1, 8, 0, 15, 110);
 	}
 
 	if(!apmaster){return;}
@@ -36,7 +36,7 @@ const spdControl = new AutoFunction("spd", 50,
 		target += 10 * Math.sign(altdiff);
 	}
 
-	n1PID.maxValue = n1sel;
+	n1PID.maxValue = n1limit;
 	const targetN1 = n1PID.update(airspeed, target);
 	const output = throttlePID.update(n1Value, targetN1);
 
